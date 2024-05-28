@@ -1,0 +1,155 @@
+---
+title: "Using the svycdiff package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the svycdiff package}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Welcome!
+
+In this vignette, we provide a brief introduction to using the `R` package `svycdiff`. The purpose of this package is to to estimate population average controlled difference (ACD), or under stronger assumptions, the population average treatment effect (PATE), for a given outcome between levels of a binary treatment, exposure, or other group membership variable of interest for clustered, stratified survey samples where sample selection depends on the comparison group. This vignette gives an overview of the `R` package and its implementation, but omits the technical details about this estimation approach. For additional details about the statistical methodology, please refer to Salerno et al. (2024+) *"What's the weight? Estimating controlled outcome differences in complex surveys for health disparities research."*
+
+```{r setup}
+library(svycdiff)
+```
+
+## Example With Simulated Data
+
+### Population Parameters 
+
+In this first example, we provide an illustration of the method using simulated data. We first generate a superpopulation of $N = 10,000$ individuals from which we can repeatedly take weighted samples. The population parameters are as follows:
+
+- Let $Y$ denote a continuous (normal) outcome of interest
+- Let $A$ denote the primary (binary) predictor of interest
+- Let $X$ denote a set of predictors which relate to both $Y$ and $A$
+
+In the context of this work, the sampling mechanism depends on $A$ and $X$. For simplicity, we have reduced the set of covariates in $X$ to be a single, Normal random variable: $X \sim N(1, 1)$.
+
+### Data Generation
+
+Population data corresponding to our independent predictor $X$ were first simulated. We then generated the rest of our data from three models: (1) the propensity model $(A \mid X)$, which characterized our primary predictor of interest, (2) the selection model, which defines the probability of inclusion into the sample given $A$ and $X$, and (3) the outcome model $(Y \mid A, X)$, which characterizes the true distribution of the outcome.
+
+**Propensity Model**
+
+We denote the primary (binary) predictor, $A$, as an indicator of the comparison groups of interest (e.g., treatment or exposure groups), and we simulate $A$ such that:
+
+$$A \mid  X \sim \text{Bin}(N, p_A)$$ 
+$$p_A = \text{logit}^{-1}(\tau X) = \frac{1}{1\ +\ \exp\{-(\tau X)\}}$$
+
+\vspace{2ex}
+
+where we let $\tau = 1$.
+  
+**Selection Model**
+
+We denote the probability of being selected into the sample as $p_S$ and we simulate this probability such that:
+  
+$$p_S = \text{logit}^{-1}[\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X] = \frac{1}{1\ +\ \exp\{-(\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X)\}}$$
+
+\vspace{2ex}
+
+where $\beta_0 = -3$ and $\beta_1 = \beta_2 = 1$. We further denote the observation/sampling weights for the study as $\omega_S = p_S^{-1}$.
+
+**Outcome Model**
+
+In generating the outcome, *we consider treatment heterogeneity*. Denote the outcome model as:
+   
+$$Y = \gamma_0 + \gamma_1 X + \gamma_2 A + \gamma_3 A X + \varepsilon;
+\quad \varepsilon \sim N(0, 0.5)$$
+
+where $\gamma_0 = \gamma_1 = \gamma_2 = 1$, and $\gamma_3 = 0.1$. Our quantity of interest is the average controlled difference (ACD), or under stronger assumptions, the population average treatment effect. Given the superpopulation generated according to the models above, we then take a random sample by generating a sampling indicator $S\ |\ A, X \sim \text{Bin}(N,\ p_s)$:
+
+```{r example}
+
+#-- Set Seed for Random Number Generation
+
+set.seed(1)
+
+#-- Define Population Parameter Values
+
+#- Population Size
+
+N <- 10000
+
+#- Propensity Model Parameter
+
+tau <- 1
+
+#- Selection Model Parameters
+
+beta0 <- -3
+
+beta1 <- 1 
+
+beta2 <- 1 
+
+#- Outcome Model Parameters
+
+gamma0 <- 1
+  
+gamma1 <- 1
+
+gamma2 <- 1
+
+gamma3 <- 0.1
+
+#-- Simulate Data
+
+X <- rnorm(N, 1)
+
+p_A <- plogis(tau * X)
+
+A <- rbinom(N, 1, p_A)
+
+p_S <- plogis(beta0 + beta1 * A + beta2 * X + rnorm(N, 0, 0.1))
+
+s_wt <- 1/p_S
+
+aa <- 1; Y1 <- gamma0 + gamma1 * X + gamma2 * aa + gamma3 * X * aa + rnorm(N)
+aa <- 0; Y0 <- gamma0 + gamma1 * X + gamma2 * aa + gamma3 * X * aa + rnorm(N)
+
+Y <- A * Y1 + (1 - A) * Y0
+
+dat <- data.frame(Y, A, X, p_A, p_S, s_wt)
+
+true_cdiff <- mean(Y1 - Y0)
+
+S <- rbinom(N, 1, p_S)
+
+samp <- dat[S == 1, ]
+
+```
+
+**Note:** In the package, we provide a function, `simdat` to generate data as we have above (see `?simdat` for more information). We simulate the data in this example manually for illustration.
+
+### Fitting the Model
+
+In order to fit the overall model, the user must specify the data (in our case, `samp`), the method we will use to estimate the controlled difference (here we will use outcome regression and direct standardization, `"OM"`; see `?svycdiff` for more details), and formulas that specify the propensity, selection, and (optionally) outcome models. From there, we can fit the method and examine the results!
+
+```{r fit}
+
+#-- Fit Model
+
+y_mod <- Y ~ A * X
+
+a_mod <- A ~ X
+
+s_mod <- p_S ~ A + X
+
+fit <- svycdiff(samp, "OM", a_mod, s_mod, y_mod, "gaussian")
+
+fit
+
+```
+
+As shown, we estimate the controlled difference to be `r round(fit$cdiff[1], 3)`, as compared to the true controlled difference of `r round(true_cdiff, 4)`. For technical details on the method, see please refer to Salerno et al. (2024+) *"What's the weight? Estimating controlled outcome differences in complex surveys for health disparities research."* To reproduce the analysis results for the main paper, see `vignette("nhanes")`.
+

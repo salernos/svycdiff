@@ -1,0 +1,14 @@
+url: ~
+
+home:
+  title: svycdiff
+  description: Controlled Difference Estimation for Complex Surveys
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  bslib:
+    base_font: {google: "Roboto"}
+    heading_font: {google: "Roboto"}
+    code_font: {google: "JetBrains Mono"}
+    primary: "#457373"
