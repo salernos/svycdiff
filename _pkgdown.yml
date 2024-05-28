@@ -1,4 +1,4 @@
-url: ~
+url: https://salernos.github.io/svycdiff/
 
 home:
   title: svycdiff
@@ -12,3 +12,4 @@ template:
     heading_font: {google: "Roboto"}
     code_font: {google: "JetBrains Mono"}
     primary: "#457373"
+

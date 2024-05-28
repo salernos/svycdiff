@@ -31,3 +31,5 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown
+URL: https://github.com/salernos/svycdiff, https://salernos.github.io/svycdiff/
+BugReports: https://github.com/salernos/svycdiff/issues
