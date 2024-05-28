@@ -31,9 +31,5 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown
-<<<<<<< HEAD
 URL: https://github.com/salernos/svycdiff, https://salernos.github.io/svycdiff/
-=======
-URL: https://github.com/salernos/svycdiff
->>>>>>> 157c4a1d72b3e66f0c6eecbc78cea9454d319bff
 BugReports: https://github.com/salernos/svycdiff/issues
