@@ -13,9 +13,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-# svycdiff
+# svycdiff <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 A basic descriptive question in statistics asks whether there are differences in mean outcomes between groups based on levels of a discrete covariate (e.g., racial disparities in health outcomes, differences in opinion based on political party identification, heterogeneity in educational outcomes for students in urban vs. rural school districts, etc).  When this categorical covariate of interest is correlated with other factors related to the outcome, however, direct comparisons may lead to erroneous estimates and invalid inferential conclusions without appropriate adjustment. 
