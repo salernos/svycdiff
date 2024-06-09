@@ -1,0 +1,873 @@
+---
+title: "Race, SES, and Telomere Length"
+subtitle: "in the National Health and Nutrition Examination Survey"
+author: "Created by Stephen Salerno. Contact: <ssalerno@ferdhutch.org>"
+date: "MAy 25, 2024"
+bibliography: ../inst/refs.bib
+link-citations: true
+output: 
+  rmarkdown::html_vignette:
+    code_folding: hide
+vignette: >
+  %\VignetteIndexEntry{Race and Telomere Length}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = F}
+
+knitr::opts_chunk$set(
+  
+  collapse = T, warning = F, error = F, message = F, comment = NA, cache = T)
+
+```
+
+This vignette introduces an example analysis using data from the publicly-available National Health and Nutrition Examination Survey (NHANES). NHANES is a nationally representative sample, collected by the Centers for Disease Control, which contains a wealth of data from demographic and socioeconomic questionnaires, nutrition and medical records, and physiological and laboratory measurements on individuals.
+
+## Background
+
+Telomeres, regions of DNA at the ends of chromosomes that protect against cellular aging and senescence, are associated with diseases incidence and many health outcomes [@shammas2011telomeres]. Differences in the telomere length are attributable to age, shortening during mitosis, in addition to genetics, behavior, exposure to environmental contaminants, and psycho-social stressors [@jiang2007telomere; @blackburn2015human]. The concept of weathering suggests that external stressors, such as lower socioeconomic status (SES) and exposures to environmental contaminants, are also associated with telomere length. Black individuals typically have longer telomeres than White individuals [@needham2013socioeconomic] with plausible explanations citing Leukocyte cell composition, population stratification, or genetic differences [@freedman1997black; @lin2016systematic; @hansen2016shorter]. Others posit that weathering due to environmental exposures or SES are underlying the perceived race effect [@gee2004environmental] as these factors differ significantly between Blacks and Whites, and studies have found telomere length to be comparable between Black and White individuals in socio-economically homogeneous populations [@dumouchel1983using]. Our motivating question is this:
+
+> If we could hypothetically balance SES between Black and White individuals in a nationally representative sample, would we still see significant Black/White differences in telomere length?
+
+This question is of particular interest in the context of this work, as the sampling mechanism for NHANES is partially determined by our covariate of interest, race, and indicators of socioeconomic status. Our primary endpoint is the log-transformed mean ratio of an individual's telomere length to a standard reference DNA sample across all leukocyte cell types (mean T/S). We focus on the 1999-2002 waves of the NHANES, which feature 4-year adjusted survey weights designed for aggregating data from across the cohorts.
+
+```{r init}
+
+#=== INITIALIZATION ============================================================
+
+#--- LOAD NECESSARY PACKAGES ---------------------------------------------------
+
+library(svycdiff)
+
+library(pacman)
+
+p_load( survey, betareg, DescTools, numDeriv, ggsci, gt, gtsummary,
+       
+  here, tidyverse, update = F) 
+
+theme_gtsummary_compact()
+
+#--- HELPER FUNCTIONS ----------------------------------------------------------
+
+U_IPTW <- function(theta, U_data, A_X) {
+
+  #--- DATA
+
+  yy <- U_data$lTELOMEAN
+  aa <- U_data$RACE_2CAT
+  
+  #--- PARAMETERS
+
+  tau <- theta[1:(length(theta) - 1)]
+  ATE <- theta[length(theta)]
+
+  #--- SCORE EQUATIONS
+
+  #-- Propensity Model
+
+  P_A1_cond_X <- plogis(A_X%*%tau)
+
+  U_A <- A_X*c(aa - P_A1_cond_X)
+
+  #-- ATE
+
+  U_ATE <- ATE - ((aa*yy/P_A1_cond_X) - ((1 - aa)*yy/(1 - P_A1_cond_X)))
+
+  return(cbind(U_A, U_ATE))
+}
+
+G_IPTW <- function(theta, U_data, A_X) {
+
+  return(apply(U_IPTW(theta, U_data, A_X), 2, sum))
+}
+
+#--- READ-IN DATA --------------------------------------------------------------
+
+load(here("data", "NHANES.rda"))
+
+```
+
+## Average Controlled Difference in Telomere Length by Self-Reported Race
+
+### Sample Characteristics
+
+Our initial sample consisted of 7,839 participants in the 1999-2002 waves of the The National Health and Nutrition Examination Survey (NHANES) with laboratory measures taken. Among these participants, 5,308 (67.7%) self-identified as Non-Hispanic White or Non-Hispanic Black. Excluding those participants without our outcome of interest, our final analytic sample contained 5,298 Non-Hispanic White or Non-Hispanic Black identifying participants with measured telomere length. In later modeling, we perform complete case analysis on *n* = 5,270 participants after removing 28 individuals without complete blood count and five part differential.
+
+```{r tab1_acd}
+
+#=== DESCRIPTIVE ANALYSIS ======================================================
+
+#--- TABLE 1: SAMPLE CHARACTERISTICS -------------------------------------------
+
+TAB1_LABS_ACD <- list(
+
+  TELOMEAN     ~ "Telomere Length, Mean T/S Ratio",
+  AGE          ~ "Age, Years",
+  SEX          ~ "Sex",
+  EDUC_3CAT    ~ "Education",
+  MARTL_3CAT   ~ "Marital Status",
+  HHSIZE_5CAT  ~ "Household Size",
+  OWNHOME_2CAT ~ "Home Ownership",
+  HOD_4CAT     ~ "Home Type",
+  HHINC_5CAT   ~ "Household Income",
+  PIR_3CAT     ~ "Poverty-Income Ratio Category",
+  EMPSTAT_4CAT ~ "Employment Status",
+  OCC_5CAT     ~ "Occupation Category",
+  HIQ_2CAT     ~ "Insurance Status",
+  FDSEC_3CAT   ~ "Food Security Status",
+  WIC_2CAT     ~ "WIC Utilization",
+  LBXWBCSI     ~ "White Blood Cell Count, SI",
+  LBXLYPCT     ~ "Lymphocyte Percent, %",
+  LBXMOPCT     ~ "Monocyte Percent, %",
+  LBXNEPCT     ~ "Segmented Neutrophils Percent, %",
+  LBXEOPCT     ~ "Eosinophils Percent, %",
+  LBXBAPCT     ~ "Basophils Percent, %")
+
+TAB1_DAT_ACD <- NHANES |>
+  
+  mutate(RACE_2CAT = factor(RACE_2CAT, 0:1, 
+                            
+    c("Non-Hispanic White", "Non-Hispanic Black"))) |>
+
+  select(TELOMEAN, RACE_2CAT, AGE, SEX, EDUC_3CAT, MARTL_3CAT, HHSIZE_5CAT,
+
+    OWNHOME_2CAT, HOD_4CAT, HHINC_5CAT, PIR_3CAT, EMPSTAT_4CAT, OCC_5CAT, 
+    
+    HIQ_2CAT, FDSEC_3CAT, WIC_2CAT, LBXWBCSI, LBXLYPCT, LBXMOPCT, LBXNEPCT, 
+    
+    LBXEOPCT, LBXBAPCT)
+
+TAB1_ACD <- TAB1_DAT_ACD |>
+
+  tbl_summary(RACE_2CAT, TAB1_LABS_ACD) |>
+
+  add_overall() |> add_p() |> bold_p() |> bold_labels() |>
+
+  modify_caption("Descriptive statistics for the analytic sample.")
+
+TAB1_ACD
+
+```
+
+### Outcome Distribution
+
+Below is the distribution of our outcome, namely the log-transformed mean ratio of an individual’s telomere length to a standard reference DNA sample across all leukocyte cell types (mean T/S) [@needham2013socioeconomic]. As shown, in the 1999-2002 waves of NHANES, Black study participants had, on average, longer telomeres than White participants.
+
+```{r fig1_acd, fig.cap = "Distribution of the outcome (log telomere length) by self-reported race and ethnicity."}
+
+#--- FIGURE 1: DISTRIBUTION OF OUTCOME BY RACE ---------------------------------
+
+FIG1_ACD <- TAB1_DAT_ACD |>
+
+  ggplot(
+    
+    aes(x = RACE_2CAT, y = TELOMEAN, color = RACE_2CAT, fill = RACE_2CAT)) +
+
+    theme_minimal() + coord_flip() +
+
+    ggdist::stat_halfeye(width = .5, alpha = 0.5) +
+
+    geom_boxplot(aes(color = RACE_2CAT),
+
+      width = 0.05, outlier.shape = NA, alpha = 0.3, size = 0.9) +
+
+    gghalves::geom_half_point(side = "l", range_scale = 0.4, alpha = 0.3) +
+
+    geom_text(
+
+      data = TAB1_DAT_ACD |> group_by(RACE_2CAT) |> count(),
+
+      aes(x = RACE_2CAT, y = 2.5, label = paste("n =", scales::comma(n))),
+
+      size = 3.5, hjust = 0, fontface = "bold") +
+
+    geom_text(
+
+      data = TAB1_DAT_ACD |> group_by(RACE_2CAT) |> 
+        
+        summarize(m = median(TELOMEAN)),
+
+      aes(x = RACE_2CAT, y = m, label = format(round(m, 2), nsmall = 2)),
+
+      nudge_x = 0.15, size = 3.5, fontface = "bold") +
+  
+    scale_fill_viridis_b(guide = F) +
+
+    scale_color_viridis_b(guide = F) +
+
+    scale_fill_jama(guide = F) +
+
+    scale_color_jama(guide = F) +
+
+    labs(
+
+      x = NULL,
+
+      y = "\nTelomere Length, Mean T/S Ratio",
+
+      title = "Distribution of Telomere Lengths",
+
+      subtitle = "by Self-Reported Race-Ethnicity") +
+
+    theme(
+
+      panel.grid.major.y = element_blank(),
+
+      axis.text.y = element_text(
+
+        colour = pal_jama()(2), face = "bold", size = 14, lineheight = 0.9),
+
+      axis.text.x = element_text(face = "bold", size = 10),
+
+      axis.title.x = element_text(face = "bold", size = 12),
+
+      panel.grid.major.x = element_line(size = 1),
+
+      panel.grid.minor.x = element_line(size = 1),
+
+      plot.title.position = "plot",
+
+      plot.title = element_text(size = 18, face = "bold"),
+
+      plot.subtitle = element_text(size = 12))
+
+FIG1_ACD
+
+```
+
+### Propensity Score Results
+
+```{r tab2_acd}
+
+#=== PROPENSITY SCORE ANALYSIS =================================================
+
+#--- COMPLETE CASE DATA --------------------------------------------------------
+
+NHANES2 <- NHANES |> drop_na(everything(), -LBXBPB_LOD) |> 
+  
+  mutate(across(is.factor, fct_drop))
+
+#--- PROPENSITY SCORE MODEL ----------------------------------------------------
+
+a_mod_acd <- RACE_2CAT ~ EDUC_3CAT + MARTL_3CAT + HHSIZE_5CAT + HHINC_5CAT + 
+  
+  PIR_3CAT + EMPSTAT_4CAT + OCC_5CAT + WIC_2CAT + FDSEC_3CAT + HOD_4CAT + 
+  
+  OWNHOME_2CAT + HIQ_2CAT
+
+#--- Pr(A = 1 | S = 1, X): WITHIN-SAMPLE PROPENSITY SCORE ----------------------
+
+TAB2_LABS_ACD <- TAB1_LABS_ACD[4:15]
+
+fit_a_acd <- glm(a_mod_acd, "binomial", NHANES2)
+
+pscore_acd <- predict(fit_a_acd, NHANES2, "response")
+
+TAB2a_ACD <- tbl_regression(fit_a_acd, TAB2_LABS_ACD, exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from unweighted propensity score model")
+
+NHANES2$ps_wt <- ifelse(NHANES2$RACE_2CAT == 1, 
+                        
+  1 / pscore_acd, 1 / (1 - pscore_acd))
+
+NHANES2$comb_wt <- with(NHANES2, ps_wt * WTMEC4YR)
+
+#--- Pr(A = 1 | X): SURVEY-WEIGHTED PROPENSITY SCORE ---------------------------
+ 
+nhanes_design <- svydesign(
+  
+  id = ~ 1, strata = NULL, weights = ~ WTMEC4YR, data = NHANES2)
+
+wtd_fit_a_acd <- svyglm(a_mod_acd, family = quasibinomial(), 
+                    
+  data = NHANES2, design = nhanes_design)
+
+wtd_pscore_acd <- predict(wtd_fit_a_acd, data = NHANES2, type = "response")
+
+TAB2b_ACD <- tbl_regression(wtd_fit_a_acd, TAB2_LABS_ACD, exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from weighted propensity score model")
+
+NHANES2$wtd_ps_wt <- ifelse(
+  
+  NHANES2$RACE_2CAT == 1, 1 / wtd_pscore_acd, 1 / (1 - wtd_pscore_acd))
+
+NHANES2$wtd_comb_wt <- with(NHANES2, WTMEC4YR*wtd_ps_wt)
+
+#--- TABLE 2: PROPENSITY SCORE ANALYSIS RESULTS --------------------------------
+
+TAB2_ACD <- tbl_merge(list(TAB2a_ACD, TAB2b_ACD),
+          
+  c("a. Unweighted Propensity Score Model",
+    "b. Survey Weighted Propensity Score Model")) |>
+  
+  modify_caption("Results from propensity score models.")
+
+TAB2_ACD
+
+```
+
+```{r tab3_acd}
+
+#=== SAMPLE SELECTION ANALYSIS =================================================
+
+#--- SELECTION MODEL -----------------------------------------------------------
+
+s_mod_acd <- iWTMEC4YR ~ RACE_2CAT + EDUC_3CAT + MARTL_3CAT + HHSIZE_5CAT + 
+  
+  HHINC_5CAT + PIR_3CAT + EMPSTAT_4CAT + OCC_5CAT + WIC_2CAT + FDSEC_3CAT + 
+  
+  HOD_4CAT + OWNHOME_2CAT + HIQ_2CAT
+
+#--- Pr(S = 1 | A, X): PROBABILITY OF SELECTION VIA BETA REGRESSION ------------
+
+fit_s_acd <- betareg(s_mod_acd, data = NHANES2)
+
+summary(fit_s_acd)
+
+```
+
+```{r proposed_acd}
+
+#=== OUR METHODS ===============================================================
+
+x <- paste(names(NHANES2)[9:22],  collapse = " + ")
+
+z <- paste(names(NHANES2)[23:28], collapse = " + ")
+
+y_mod_acd <- formula(
+  
+  paste("lTELOMEAN ~ RACE_2CAT +", x, "+", z, collapse = " "))
+
+y_mod2_acd <- lTELOMEAN ~ 1
+
+fit_ID1_acd <- svycdiff(NHANES2, "OM", a_mod_acd, s_mod_acd, y_mod_acd, 
+                      
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
+fit_ID2a_acd <- svycdiff(NHANES2, "IPW1", a_mod_acd, s_mod_acd, y_mod2_acd, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
+fit_ID2b_acd <- svycdiff(NHANES2, "IPW2", a_mod_acd, s_mod_acd, y_mod2_acd, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
+```
+
+```{r comparison_acd}
+
+#=== COMPARISON METHODS ========================================================
+
+#--- MULTIPLE REGRESSION -------------------------------------------------------
+      
+fit_lm_acd <- glm(y_mod_acd, data = NHANES2)
+
+res_lm_acd <- summary(fit_lm_acd)$coefficients[2, 1:2]
+
+#--- IPTW ESTIMATOR ------------------------------------------------------------
+
+fit_iptw_acd <- with(NHANES2, 
+                 
+  mean((RACE_2CAT * lTELOMEAN / pscore_acd) - 
+         
+    ((1 - RACE_2CAT) * lTELOMEAN / (1 - pscore_acd))))
+
+ests_iptw_acd <- c(coef(fit_a_acd), ate = fit_iptw_acd)
+
+A_X_acd <- model.matrix(a_mod_acd, NHANES2)
+
+halfmeat_iptw_acd <- U_IPTW(theta = ests_iptw_acd, NHANES2, A_X_acd)
+
+bread_iptw_acd <- jacobian(G_IPTW, 
+                           
+  ests_iptw_acd, U_data = NHANES2, A_X = A_X_acd)
+
+IF_iptw_acd <- halfmeat_iptw_acd %*% t(solve(-bread_iptw_acd))
+
+err_iptw_acd <- sqrt(sum(IF_iptw_acd[, ncol(IF_iptw_acd)]^2))
+
+res_iptw_acd <- c(est = fit_iptw_acd, err = err_iptw_acd)
+
+#--- SURVEY-WEIGHTED MULTIPLE REGRESSION ---------------------------------------
+
+des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ WTMEC4YR, data = NHANES2)
+
+fit_svywtdlm_acd <- svyglm(y_mod_acd, design = des_svywtdlm)
+
+res_svywtdlm_acd <- summary(fit_svywtdlm_acd)$coefficients[2, 1:2]
+
+#--- IPTW MULTIPLE REGRESSION --------------------------------------------------
+
+fit_iptwlm_acd <- glm(y_mod_acd, data = NHANES2, weights = NHANES2$ps_wt)
+
+res_iptwlm_acd <- summary(fit_iptwlm_acd)$coefficients[2, 1:2]
+
+#--- IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION --------------------------------
+
+des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ comb_wt, data = NHANES2)
+
+fit_pssvywtdlm_acd <- svyglm(y_mod_acd, design = des_pssvywtdlm)
+
+res_pssvywtdlm_acd <- summary(fit_pssvywtdlm_acd)$coefficients[2, 1:2]
+
+#--- WEIGHTED IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION -----------------------
+
+des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ wtd_comb_wt, data = NHANES2)
+
+fit_wtdpssvywtdlm_acd <- svyglm(y_mod_acd, design = des_wtdpssvywtdlm)
+
+res_wtdpssvywtdlm_acd <- summary(fit_wtdpssvywtdlm_acd)$coefficients[2, 1:2]
+
+```
+
+### Comparison of Results for Effect of Race
+
+```{r results_acd}
+
+#=== ALL RESULTS ===============================================================
+
+mthds <- c("Multiple Regression", "IPTW Estimator", 
+           
+  "Survey-Weighted Multiple Regression", "IPTW Multiple Regression", 
+  
+  "IPTW + Survey-Weighted Multiple Regression",
+  
+  "Weighted IPTW + Survey-Weighted Multiple Regression",
+
+  "Proposed OM", "Proposed IPW1","Proposed IPW2")
+
+NHANES_RESULTS_ACD <- rbind(res_lm_acd, res_iptw_acd, res_svywtdlm_acd, 
+                            
+  res_iptwlm_acd, res_pssvywtdlm_acd, res_wtdpssvywtdlm_acd,
+  
+  fit_ID1_acd$cdiff[ c(1:2)], 
+  fit_ID2a_acd$cdiff[c(1:2)],
+  fit_ID2b_acd$cdiff[c(1:2)]
+)
+
+colnames(NHANES_RESULTS_ACD) <- c("est", "err")
+
+NHANES_RESULTS_ACD |> as_tibble() |> 
+  
+  mutate(Method = mthds, lwr = est - 1.96*err, upr = est + 1.96*err) |>
+  
+  select(Method, est, lwr, upr) |>
+  
+  rename("Estimate" = "est", "LCL" = "lwr", "UCL" = "upr") |>
+  
+  gt() |> fmt_number(2:4, decimals = 4)
+
+```
+
+## Population Average Treatment Effect for Lead Exposure on Telomere Length
+
+In a supplementary analysis, we present an example from NHANES which may warrant a causal interpretation to illustrate how the proposed methods can, under stronger assumptions, identify the average difference in potential outcome means (population average treatment effect; PATE). Specifically, we study the effect of exposure to a particular environmental contaminant, lead, on telomere length.
+
+### Sample Characteristics
+
+We perform complete case analysis on *n* = 5,267 participants after further removing 3 individuals without laboratory values for blood lead concentration. To illustrate our proposed approach, we dichotomized blood lead concentration at it's median value to create a 'high' and 'low' exposure group.
+
+```{r tab1_ate}
+
+#=== DESCRIPTIVE ANALYSIS ======================================================
+
+NHANES3 <- NHANES2 |> 
+  
+  drop_na() |>
+  
+  mutate(LEAD_2CAT = ntile(LBXBPB_LOD, 2) - 1)
+
+#--- TABLE 1: SAMPLE CHARACTERISTICS -------------------------------------------
+
+TAB1_LABS_ATE <- list(
+
+  TELOMEAN     ~ "Telomere Length, Mean T/S Ratio",
+  AGE          ~ "Age, Years",
+  SEX          ~ "Sex",
+  RACE_2CAT    ~ "Race",
+  EDUC_3CAT    ~ "Education",
+  MARTL_3CAT   ~ "Marital Status",
+  HHSIZE_5CAT  ~ "Household Size",
+  OWNHOME_2CAT ~ "Home Ownership",
+  HOD_4CAT     ~ "Home Type",
+  HHINC_5CAT   ~ "Household Income",
+  PIR_3CAT     ~ "Poverty-Income Ratio Category",
+  EMPSTAT_4CAT ~ "Employment Status",
+  OCC_5CAT     ~ "Occupation Category",
+  HIQ_2CAT     ~ "Insurance Status",
+  FDSEC_3CAT   ~ "Food Security Status",
+  WIC_2CAT     ~ "WIC Utilization",
+  LBXWBCSI     ~ "White Blood Cell Count, SI",
+  LBXLYPCT     ~ "Lymphocyte Percent, %",
+  LBXMOPCT     ~ "Monocyte Percent, %",
+  LBXNEPCT     ~ "Segmented Neutrophils Percent, %",
+  LBXEOPCT     ~ "Eosinophils Percent, %",
+  LBXBAPCT     ~ "Basophils Percent, %")
+
+TAB1_DAT_ATE <- NHANES3 |>
+  
+  mutate(
+    
+    RACE_2CAT = factor(RACE_2CAT, 0:1, 
+                            
+      c("Non-Hispanic White", "Non-Hispanic Black")),
+    
+    LEAD_2CAT = factor(LEAD_2CAT, 0:1,
+                       
+      c("Low Lead Exposure", "High Lead Exposure"))) |>
+
+  select(TELOMEAN, LEAD_2CAT, RACE_2CAT, AGE, SEX, EDUC_3CAT, MARTL_3CAT, 
+         
+    HHSIZE_5CAT, OWNHOME_2CAT, HOD_4CAT, HHINC_5CAT, PIR_3CAT, EMPSTAT_4CAT, 
+    
+    OCC_5CAT, HIQ_2CAT, FDSEC_3CAT, WIC_2CAT, LBXWBCSI, LBXLYPCT, LBXMOPCT, 
+    
+    LBXNEPCT, LBXEOPCT, LBXBAPCT)
+
+TAB1_ATE <- TAB1_DAT_ATE |>
+
+  tbl_summary(LEAD_2CAT, TAB1_LABS_ATE) |>
+
+  add_overall() |> add_p() |> bold_p() |> bold_labels() |>
+
+  modify_caption("Descriptive statistics for the analytic sample.")
+
+TAB1_ATE
+
+```
+
+### Outcome Distribution
+
+Below is the distribution of our outcome, namely the log-transformed mean ratio of an individual’s telomere length to a standard reference DNA sample across all leukocyte cell types (mean T/S) [@needham2013socioeconomic]. As shown, in the 1999-2002 waves of NHANES, participants with higher lead exposure had, on average, longer telomeres than participants with lower blood lead concentrations.
+
+```{r fig1_ate, fig.cap = "Distribution of the outcome (log telomere length) by blood lead concentration, dichotomized at the median ug/dL value."}
+
+#--- FIGURE 1: DISTRIBUTION OF OUTCOME BY RACE ---------------------------------
+
+FIG1_ATE <- TAB1_DAT_ATE |>
+
+  ggplot(
+    
+    aes(x = LEAD_2CAT, y = TELOMEAN, color = LEAD_2CAT, fill = LEAD_2CAT)) +
+
+    theme_minimal() + coord_flip() +
+
+    ggdist::stat_halfeye(width = .5, alpha = 0.5) +
+
+    geom_boxplot(aes(color = LEAD_2CAT),
+
+      width = 0.05, outlier.shape = NA, alpha = 0.3, size = 0.9) +
+
+    gghalves::geom_half_point(side = "l", range_scale = 0.4, alpha = 0.3) +
+
+    geom_text(
+
+      data = TAB1_DAT_ATE |> group_by(LEAD_2CAT) |> count(),
+
+      aes(x = LEAD_2CAT, y = 2.5, label = paste("n =", scales::comma(n))),
+
+      size = 3.5, hjust = 0, fontface = "bold") +
+
+    geom_text(
+
+      data = TAB1_DAT_ATE |> group_by(LEAD_2CAT) |> 
+        
+        summarize(m = median(TELOMEAN)),
+
+      aes(x = LEAD_2CAT, y = m, label = format(round(m, 2), nsmall = 2)),
+
+      nudge_x = 0.15, size = 3.5, fontface = "bold") +
+  
+    scale_fill_viridis_b(guide = F) +
+
+    scale_color_viridis_b(guide = F) +
+
+    scale_fill_jama(guide = F) +
+
+    scale_color_jama(guide = F) +
+
+    labs(
+
+      x = NULL,
+
+      y = "\nTelomere Length, Mean T/S Ratio",
+
+      title = "Distribution of Telomere Lengths",
+
+      subtitle = "by Blood Lead Concentration") +
+
+    theme(
+
+      panel.grid.major.y = element_blank(),
+
+      axis.text.y = element_text(
+
+        colour = pal_jama()(2), face = "bold", size = 14, lineheight = 0.9),
+
+      axis.text.x = element_text(face = "bold", size = 10),
+
+      axis.title.x = element_text(face = "bold", size = 12),
+
+      panel.grid.major.x = element_line(size = 1),
+
+      panel.grid.minor.x = element_line(size = 1),
+
+      plot.title.position = "plot",
+
+      plot.title = element_text(size = 18, face = "bold"),
+
+      plot.subtitle = element_text(size = 12))
+
+FIG1_ATE
+
+```
+
+### Propensity Score Results
+
+```{r tab2_ate}
+
+#=== PROPENSITY SCORE ANALYSIS =================================================
+
+#--- PROPENSITY SCORE MODEL ----------------------------------------------------
+
+a_mod_ate <- LEAD_2CAT ~ EDUC_3CAT + MARTL_3CAT + HHSIZE_5CAT + HHINC_5CAT + 
+  
+  PIR_3CAT + EMPSTAT_4CAT + OCC_5CAT + WIC_2CAT + FDSEC_3CAT + HOD_4CAT + 
+  
+  OWNHOME_2CAT + HIQ_2CAT
+
+#--- Pr(A = 1 | S = 1, X): WITHIN-SAMPLE PROPENSITY SCORE ----------------------
+
+TAB2_LABS_ATE <- TAB1_LABS_ATE[5:15]
+
+fit_a_ate <- glm(a_mod_ate, "binomial", NHANES3)
+
+pscore_ate <- predict(fit_a_ate, NHANES3, "response")
+
+TAB2a_ATE <- tbl_regression(fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from unweighted propensity score model")
+
+NHANES3$ps_wt <- ifelse(NHANES3$LEAD_2CAT == 1, 
+                        
+  1 / pscore_ate, 1 / (1 - pscore_ate))
+
+NHANES3$comb_wt <- with(NHANES3, ps_wt * WTMEC4YR)
+
+#--- Pr(A = 1 | X): SURVEY-WEIGHTED PROPENSITY SCORE ---------------------------
+ 
+nhanes_design <- svydesign(
+  
+  id = ~ 1, strata = NULL, weights = ~ WTMEC4YR, data = NHANES3)
+
+wtd_fit_a_ate <- svyglm(a_mod_ate, family = quasibinomial(), 
+                    
+  data = NHANES3, design = nhanes_design)
+
+wtd_pscore_ate <- predict(wtd_fit_a_ate, data = NHANES3, type = "response")
+
+TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from weighted propensity score model")
+
+NHANES3$wtd_ps_wt <- ifelse(
+  
+  NHANES3$LEAD_2CAT == 1, 1 / wtd_pscore_ate, 1 / (1 - wtd_pscore_ate))
+
+NHANES3$wtd_comb_wt <- with(NHANES3, WTMEC4YR*wtd_ps_wt)
+
+#--- TABLE 2: PROPENSITY SCORE ANALYSIS RESULTS --------------------------------
+
+TAB2_ATE <- tbl_merge(list(TAB2a_ATE, TAB2b_ATE),
+          
+  c("a. Unweighted Propensity Score Model",
+    "b. Survey Weighted Propensity Score Model")) |>
+  
+  modify_caption("Results from propensity score models.")
+
+TAB2_ATE
+
+```
+
+```{r tab3_ate}
+
+#=== SAMPLE SELECTION ANALYSIS =================================================
+
+#--- SELECTION MODEL -----------------------------------------------------------
+
+s_mod_ate <- iWTMEC4YR ~ LEAD_2CAT + RACE_2CAT + EDUC_3CAT + MARTL_3CAT + 
+  
+  HHSIZE_5CAT + HHINC_5CAT + PIR_3CAT + EMPSTAT_4CAT + OCC_5CAT + WIC_2CAT + 
+  
+  FDSEC_3CAT + HOD_4CAT + OWNHOME_2CAT + HIQ_2CAT
+
+#--- Pr(S = 1 | A, X): PROBABILITY OF SELECTION VIA BETA REGRESSION ------------
+
+fit_s_ate <- betareg(s_mod_ate, data = NHANES3)
+
+summary(fit_s_ate)
+
+```
+
+```{r proposed_ate}
+
+#=== OUR METHODS ===============================================================
+
+x <- paste(names(NHANES3)[8:22],  collapse = " + ")
+
+z <- paste(names(NHANES2)[23:28], collapse = " + ")
+
+y_mod_ate <- formula(
+  
+  paste("lTELOMEAN ~ LEAD_2CAT +", x, "+", z, collapse = " "))
+
+y_mod2_ate <- lTELOMEAN ~ 1
+
+fit_ID1_ate <- svycdiff(NHANES3, "OM", a_mod_ate, s_mod_ate, y_mod_ate, 
+                      
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
+fit_ID2a_ate <- svycdiff(NHANES3, "IPW1", a_mod_ate, s_mod_ate, y_mod2_ate, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
+fit_ID2b_ate <- svycdiff(NHANES3, "IPW2", a_mod_ate, s_mod_ate, y_mod2_ate, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
+```
+
+```{r comparison_ate}
+
+#=== COMPARISON METHODS ========================================================
+
+#--- MULTIPLE REGRESSION -------------------------------------------------------
+      
+fit_lm_ate <- glm(y_mod_ate, data = NHANES3)
+
+res_lm_ate <- summary(fit_lm_ate)$coefficients[2, 1:2]
+
+#--- IPTW ESTIMATOR ------------------------------------------------------------
+
+fit_iptw_ate <- with(NHANES3, 
+                 
+  mean((LEAD_2CAT * lTELOMEAN / pscore_ate) - 
+         
+    ((1 - LEAD_2CAT) * lTELOMEAN / (1 - pscore_ate))))
+
+ests_iptw_ate <- c(coef(fit_a_ate), ate = fit_iptw_ate)
+
+A_X_ate <- model.matrix(a_mod_ate, NHANES3)
+
+halfmeat_iptw_ate <- U_IPTW(theta = ests_iptw_ate, NHANES3, A_X_ate)
+
+bread_iptw_ate <- jacobian(G_IPTW, 
+                           
+  ests_iptw_ate, U_data = NHANES3, A_X = A_X_ate)
+
+IF_iptw_ate <- halfmeat_iptw_ate %*% t(solve(-bread_iptw_ate))
+
+err_iptw_ate <- sqrt(sum(IF_iptw_ate[, ncol(IF_iptw_ate)]^2))
+
+res_iptw_ate <- c(est = fit_iptw_ate, err = err_iptw_ate)
+
+#--- SURVEY-WEIGHTED MULTIPLE REGRESSION ---------------------------------------
+
+des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ WTMEC4YR, data = NHANES3)
+
+fit_svywtdlm_ate <- svyglm(y_mod_ate, design = des_svywtdlm)
+
+res_svywtdlm_ate <- summary(fit_svywtdlm_ate)$coefficients[2, 1:2]
+
+#--- IPTW MULTIPLE REGRESSION --------------------------------------------------
+
+fit_iptwlm_ate <- glm(y_mod_ate, data = NHANES3, weights = NHANES3$ps_wt)
+
+res_iptwlm_ate <- summary(fit_iptwlm_ate)$coefficients[2, 1:2]
+
+#--- IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION --------------------------------
+
+des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ comb_wt, data = NHANES3)
+
+fit_pssvywtdlm_ate <- svyglm(y_mod_ate, design = des_pssvywtdlm)
+
+res_pssvywtdlm_ate <- summary(fit_pssvywtdlm_ate)$coefficients[2, 1:2]
+
+#--- WEIGHTED IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION -----------------------
+
+des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ wtd_comb_wt, data = NHANES3)
+
+fit_wtdpssvywtdlm_ate <- svyglm(y_mod_ate, design = des_wtdpssvywtdlm)
+
+res_wtdpssvywtdlm_ate <- summary(fit_wtdpssvywtdlm_ate)$coefficients[2, 1:2]
+
+```
+
+### Comparison of Results for Effect of Lead Exposure
+
+```{r results_ate}
+
+#=== ALL RESULTS ===============================================================
+
+mthds <- c("Multiple Regression", "IPTW Estimator", 
+           
+  "Survey-Weighted Multiple Regression", "IPTW Multiple Regression", 
+  
+  "IPTW + Survey-Weighted Multiple Regression",
+  
+  "Weighted IPTW + Survey-Weighted Multiple Regression",
+
+  "Proposed OM", "Proposed IPW1", "Proposed IPW2")
+
+NHANES_RESULTS_ATE <- rbind(res_lm_ate, res_iptw_ate, res_svywtdlm_ate, 
+                            
+  res_iptwlm_ate, res_pssvywtdlm_ate, res_wtdpssvywtdlm_ate,
+  
+  fit_ID1_ate$cdiff[ c(1:2)],
+  fit_ID2a_ate$cdiff[c(1:2)],
+  fit_ID2b_ate$cdiff[c(1:2)]
+)
+
+colnames(NHANES_RESULTS_ATE) <- c("est", "err")
+
+NHANES_RESULTS_ATE |> as_tibble() |> 
+  
+  mutate(Method = mthds, lwr = est - 1.96*err, upr = est + 1.96*err) |>
+  
+  select(Method, est, lwr, upr) |>
+  
+  rename("Estimate" = "est", "LCL" = "lwr", "UCL" = "upr") |>
+  
+  gt() |> fmt_number(2:4, decimals = 4)
+
+#=== END =======================================================================
+
+```
+
+
+
+
+
