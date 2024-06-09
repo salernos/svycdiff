@@ -4,7 +4,7 @@ Title: Controlled Difference Estimation for Complex Surveys
 Version: 0.1.0
 Authors@R: c(
     person(given = "Stephen", family = "Salerno",
-           email = "ssalerno@fredhutch.org", role = c("aut", "cre"),
+           email = "salernos@umich.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2763-0494")),
     person(given = "Emily K", family = "Roberts", 
            email = "emily-roberts-1@uiowa.edu", role = c("aut")),
@@ -14,7 +14,7 @@ Authors@R: c(
            email = "bhramar@umich.edu", role = c("aut")),
     person(given = "Xu", family = "Shi",
            email = "shixu@umich.edu", role = c("aut")))
-Maintainer: Stephen Salerno <ssalerno@fredhutch.org>
+Maintainer: Stephen Salerno <salernos@umich.edu>
 Description: R package to estimate population average controlled difference (ACD), or under stronger assumptions, the population average treatment effect (PATE), for a given outcome between levels of a binary treatment, exposure, or other group membership variable of interest for clustered, stratified survey samples where sample selection depends on the comparison group.
 License: GPL (>= 3)
 Encoding: UTF-8
