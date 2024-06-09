@@ -1,9 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# svycdiff
+# svycdiff <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 A basic descriptive question in statistics asks whether there are
