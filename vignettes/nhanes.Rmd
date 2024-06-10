@@ -42,7 +42,7 @@ library(svycdiff)
 
 library(pacman)
 
-p_load( survey, betareg, DescTools, numDeriv, ggsci, gt, gtsummary,
+p_load(survey, betareg, DescTools, numDeriv, ggsci, gt, gtsummary,
        
   here, tidyverse, update = F) 
 
