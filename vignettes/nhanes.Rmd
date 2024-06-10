@@ -9,7 +9,7 @@ output:
   rmarkdown::html_vignette:
     code_folding: hide
 vignette: >
-  %\VignetteIndexEntry{Race and Telomere Length}
+  %\VignetteIndexEntry{Race, SES, and Telomere Length}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
