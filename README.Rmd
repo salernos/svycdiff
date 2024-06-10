@@ -73,14 +73,8 @@ Once you have `svycdiff` installed, you can type
 vignette("svycdiff")
 ```
 
-or
-
-```{r, eval = F}
-vignette("nhanes")
-```
-
-in `R` to bring up tutorials on `svycdiff` and how to use it.
+in `R` to bring up a tutorial on `svycdiff` and how to use it.
 
 ## Questions
 
-For questions and comments, please contact Stephen Salerno (<ssalerno@fredhutch.org>).
+For technical details on the method, see please refer to Salerno et al. (2024+) *"What's the weight? Estimating controlled outcome differences in complex surveys for health disparities research."* To reproduce the analysis results for the main paper, see `inst/nhanes.Rmd`. For questions and comments, please contact Stephen Salerno (<ssalerno@fredhutch.org>).

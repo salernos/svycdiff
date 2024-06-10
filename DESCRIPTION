@@ -31,15 +31,5 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown,
-    markdown,
-    pacman,
-    DescTools, 
-    ggdist,
-    gghalves,
-    ggsci, 
-    gt, 
-    gtsummary,
-    here, 
-    tidyverse
 URL: https://github.com/salernos/svycdiff, https://salernos.github.io/svycdiff/
 BugReports: https://github.com/salernos/svycdiff/issues
