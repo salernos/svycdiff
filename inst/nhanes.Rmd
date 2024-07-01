@@ -649,13 +649,25 @@ a_mod_ate <- LEAD_2CAT ~ EDUC_3CAT + MARTL_3CAT + HHSIZE_5CAT + HHINC_5CAT +
   
   OWNHOME_2CAT + HIQ_2CAT
 
+a_mod2_ate <- LEAD_2CAT ~ RACE_2CAT + EDUC_3CAT + MARTL_3CAT + HHSIZE_5CAT + 
+  
+  HHINC_5CAT + PIR_3CAT + EMPSTAT_4CAT + OCC_5CAT + WIC_2CAT + FDSEC_3CAT + 
+  
+  HOD_4CAT + OWNHOME_2CAT + HIQ_2CAT
+
 #--- Pr(A = 1 | S = 1, X): WITHIN-SAMPLE PROPENSITY SCORE ----------------------
 
 TAB2_LABS_ATE <- TAB1_LABS_ATE[5:15]
 
+TAB2_LABS2_ATE <- TAB1_LABS_ATE[4:15]
+
 fit_a_ate <- glm(a_mod_ate, "binomial", NHANES3)
 
+fit2_a_ate <- glm(a_mod2_ate, "binomial", NHANES3)
+
 pscore_ate <- predict(fit_a_ate, NHANES3, "response")
+
+pscore_ate2 <- predict(fit2_a_ate, NHANES3, "response")
 
 TAB2a_ATE <- tbl_regression(fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
 
@@ -663,11 +675,23 @@ TAB2a_ATE <- tbl_regression(fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
 
   modify_caption("Results from unweighted propensity score model")
 
+TAB2a_ATE2 <- tbl_regression(fit2_a_ate, TAB2_LABS2_ATE, exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from unweighted propensity score model with race")
+
 NHANES3$ps_wt <- ifelse(NHANES3$LEAD_2CAT == 1, 
                         
   1 / pscore_ate, 1 / (1 - pscore_ate))
 
+NHANES3$ps_wt2 <- ifelse(NHANES3$LEAD_2CAT == 1, 
+                        
+  1 / pscore_ate2, 1 / (1 - pscore_ate2))
+
 NHANES3$comb_wt <- with(NHANES3, ps_wt * WTMEC4YR)
+
+NHANES3$comb_wt2 <- with(NHANES3, ps_wt2 * WTMEC4YR)
 
 #--- Pr(A = 1 | X): SURVEY-WEIGHTED PROPENSITY SCORE ---------------------------
  
@@ -679,7 +703,13 @@ wtd_fit_a_ate <- svyglm(a_mod_ate, family = quasibinomial(),
                     
   data = NHANES3, design = nhanes_design)
 
+wtd_fit2_a_ate <- svyglm(a_mod2_ate, family = quasibinomial(), 
+                    
+  data = NHANES3, design = nhanes_design)
+
 wtd_pscore_ate <- predict(wtd_fit_a_ate, data = NHANES3, type = "response")
+
+wtd_pscore_ate2 <- predict(wtd_fit2_a_ate, data = NHANES3, type = "response")
 
 TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
 
@@ -687,18 +717,34 @@ TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
 
   modify_caption("Results from weighted propensity score model")
 
+TAB2b_ATE2 <- tbl_regression(wtd_fit2_a_ate, TAB2_LABS2_ATE, 
+                             
+  exponentiate = T) |>
+
+  bold_p() |> bold_labels() |>
+
+  modify_caption("Results from weighted propensity score model with race")
+
 NHANES3$wtd_ps_wt <- ifelse(
   
   NHANES3$LEAD_2CAT == 1, 1 / wtd_pscore_ate, 1 / (1 - wtd_pscore_ate))
 
-NHANES3$wtd_comb_wt <- with(NHANES3, WTMEC4YR*wtd_ps_wt)
+NHANES3$wtd_ps_wt2 <- ifelse(
+  
+  NHANES3$LEAD_2CAT == 1, 1 / wtd_pscore_ate2, 1 / (1 - wtd_pscore_ate2))
+
+NHANES3$wtd_comb_wt <- with(NHANES3, wtd_ps_wt * WTMEC4YR)
+
+NHANES3$wtd_comb_wt2 <- with(NHANES3, wtd_ps_wt2 * WTMEC4YR)
 
 #--- TABLE 2: PROPENSITY SCORE ANALYSIS RESULTS --------------------------------
 
-TAB2_ATE <- tbl_merge(list(TAB2a_ATE, TAB2b_ATE),
+TAB2_ATE <- tbl_merge(list(TAB2a_ATE, TAB2a_ATE2, TAB2b_ATE, TAB2b_ATE2),
           
   c("a. Unweighted Propensity Score Model",
-    "b. Survey Weighted Propensity Score Model")) |>
+    "b. Unweighted Propensity Score Model with Race",
+    "c. Survey Weighted Propensity Score Model",
+    "d. Survey Weighted Propensity Score Model with Race")) |>
   
   modify_caption("Results from propensity score models.")
 
@@ -744,11 +790,23 @@ fit_ID1_ate <- svycdiff(NHANES3, "OM", a_mod_ate, s_mod_ate, y_mod_ate,
                       
   "gaussian", "SDMVSTRA", "SDMVPSU")
 
+fit2_ID1_ate <- svycdiff(NHANES3, "OM", a_mod2_ate, s_mod_ate, y_mod_ate, 
+                      
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
 fit_ID2a_ate <- svycdiff(NHANES3, "IPW1", a_mod_ate, s_mod_ate, y_mod2_ate, 
                        
   NULL, "SDMVSTRA", "SDMVPSU")
 
+fit2_ID2a_ate <- svycdiff(NHANES3, "IPW1", a_mod2_ate, s_mod_ate, y_mod2_ate, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
 fit_ID2b_ate <- svycdiff(NHANES3, "IPW2", a_mod_ate, s_mod_ate, y_mod2_ate, 
+                       
+  NULL, "SDMVSTRA", "SDMVPSU")
+
+fit2_ID2b_ate <- svycdiff(NHANES3, "IPW2", a_mod2_ate, s_mod_ate, y_mod2_ate, 
                        
   NULL, "SDMVSTRA", "SDMVPSU")
 
@@ -765,6 +823,8 @@ fit_lm_ate <- glm(y_mod_ate, data = NHANES3)
 res_lm_ate <- summary(fit_lm_ate)$coefficients[2, 1:2]
 
 #--- IPTW ESTIMATOR ------------------------------------------------------------
+
+#-- W/O Race in Propensity Model
 
 fit_iptw_ate <- with(NHANES3, 
                  
@@ -788,6 +848,30 @@ err_iptw_ate <- sqrt(sum(IF_iptw_ate[, ncol(IF_iptw_ate)]^2))
 
 res_iptw_ate <- c(est = fit_iptw_ate, err = err_iptw_ate)
 
+#-- W/ Race in Propensity Model
+
+fit2_iptw_ate <- with(NHANES3, 
+                 
+  mean((LEAD_2CAT * lTELOMEAN / pscore_ate2) - 
+         
+    ((1 - LEAD_2CAT) * lTELOMEAN / (1 - pscore_ate2))))
+
+ests_iptw_ate2 <- c(coef(fit2_a_ate), ate = fit2_iptw_ate)
+
+A_X_ate2 <- model.matrix(a_mod2_ate, NHANES3)
+
+halfmeat_iptw_ate2 <- U_IPTW(theta = ests_iptw_ate2, NHANES3, A_X_ate2)
+
+bread_iptw_ate2 <- jacobian(G_IPTW, 
+                           
+  ests_iptw_ate2, U_data = NHANES3, A_X = A_X_ate2)
+
+IF_iptw_ate2 <- halfmeat_iptw_ate2 %*% t(solve(-bread_iptw_ate2))
+
+err_iptw_ate2 <- sqrt(sum(IF_iptw_ate2[, ncol(IF_iptw_ate2)]^2))
+
+res_iptw_ate2 <- c(est = fit2_iptw_ate, err = err_iptw_ate2)
+
 #--- SURVEY-WEIGHTED MULTIPLE REGRESSION ---------------------------------------
 
 des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
@@ -800,11 +884,21 @@ res_svywtdlm_ate <- summary(fit_svywtdlm_ate)$coefficients[2, 1:2]
 
 #--- IPTW MULTIPLE REGRESSION --------------------------------------------------
 
+#-- W/O Race in Propensity Model
+
 fit_iptwlm_ate <- glm(y_mod_ate, data = NHANES3, weights = NHANES3$ps_wt)
 
 res_iptwlm_ate <- summary(fit_iptwlm_ate)$coefficients[2, 1:2]
 
+#-- W/ Race in Propensity Model
+
+fit_iptwlm_ate2 <- glm(y_mod_ate, data = NHANES3, weights = NHANES3$ps_wt2)
+
+res_iptwlm_ate2 <- summary(fit_iptwlm_ate2)$coefficients[2, 1:2]
+
 #--- IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION --------------------------------
+
+#-- W/O Race in Propensity Model
 
 des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
                         
@@ -814,7 +908,19 @@ fit_pssvywtdlm_ate <- svyglm(y_mod_ate, design = des_pssvywtdlm)
 
 res_pssvywtdlm_ate <- summary(fit_pssvywtdlm_ate)$coefficients[2, 1:2]
 
+#-- W/ Race in Propensity Model
+
+des_pssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ comb_wt2, data = NHANES3)
+
+fit_pssvywtdlm_ate2 <- svyglm(y_mod_ate, design = des_pssvywtdlm2)
+
+res_pssvywtdlm_ate2 <- summary(fit_pssvywtdlm_ate2)$coefficients[2, 1:2]
+
 #--- WEIGHTED IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION -----------------------
+
+#-- W/O Race in Propensity Model
 
 des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
                         
@@ -824,6 +930,16 @@ fit_wtdpssvywtdlm_ate <- svyglm(y_mod_ate, design = des_wtdpssvywtdlm)
 
 res_wtdpssvywtdlm_ate <- summary(fit_wtdpssvywtdlm_ate)$coefficients[2, 1:2]
 
+#-- W Race in Propensity Model
+
+des_wtdpssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+                        
+  weights = ~ wtd_comb_wt2, data = NHANES3)
+
+fit_wtdpssvywtdlm_ate2 <- svyglm(y_mod_ate, design = des_wtdpssvywtdlm2)
+
+res_wtdpssvywtdlm_ate2 <- summary(fit_wtdpssvywtdlm_ate2)$coefficients[2, 1:2]
+
 ```
 
 ### Comparison of Results for Effect of Lead Exposure
@@ -832,23 +948,41 @@ res_wtdpssvywtdlm_ate <- summary(fit_wtdpssvywtdlm_ate)$coefficients[2, 1:2]
 
 #=== ALL RESULTS ===============================================================
 
-mthds <- c("Multiple Regression", "IPTW Estimator", 
+mthds <- c("Multiple Regression", 
            
-  "Survey-Weighted Multiple Regression", "IPTW Multiple Regression", 
+  "IPTW Estimator", 
+  
+  "IPTW Estimator w/ Race in Propensity Model",
+           
+  "Survey-Weighted Multiple Regression", 
+  
+  "IPTW Multiple Regression", 
+  
+  "IPTW Multiple Regression w/ Race in Propensity Model",
   
   "IPTW + Survey-Weighted Multiple Regression",
   
+  "IPTW + Survey-Weighted Multiple Regression w/ Race in Propensity Model",
+
   "Weighted IPTW + Survey-Weighted Multiple Regression",
-
-  "Proposed OM", "Proposed IPW1", "Proposed IPW2")
-
-NHANES_RESULTS_ATE <- rbind(res_lm_ate, res_iptw_ate, res_svywtdlm_ate, 
-                            
-  res_iptwlm_ate, res_pssvywtdlm_ate, res_wtdpssvywtdlm_ate,
   
-  fit_ID1_ate$cdiff[ c(1:2)],
-  fit_ID2a_ate$cdiff[c(1:2)],
-  fit_ID2b_ate$cdiff[c(1:2)]
+  "Weighted IPTW + Survey-Weighted Multiple Regression w/ Race in Propensity Model",
+
+  "Proposed OM",   "Proposed OM w/ Race in Propensity Model", 
+  
+  "Proposed IPW1", "Proposed IPW1 w/ Race in Propensity Model",
+  
+  "Proposed IPW2", "Proposed IPW2 w/ Race in Propensity Model")
+
+NHANES_RESULTS_ATE <- rbind(res_lm_ate, res_iptw_ate, res_iptw_ate2, 
+  
+  res_svywtdlm_ate, res_iptwlm_ate, res_iptwlm_ate2, res_pssvywtdlm_ate, 
+  
+  res_pssvywtdlm_ate2, res_wtdpssvywtdlm_ate, res_wtdpssvywtdlm_ate2,
+  
+  fit_ID1_ate$cdiff[ c(1:2)], fit2_ID1_ate$cdiff[ c(1:2)],
+  fit_ID2a_ate$cdiff[c(1:2)], fit2_ID2a_ate$cdiff[c(1:2)],
+  fit_ID2b_ate$cdiff[c(1:2)], fit2_ID2b_ate$cdiff[c(1:2)]
 )
 
 colnames(NHANES_RESULTS_ATE) <- c("est", "err")
