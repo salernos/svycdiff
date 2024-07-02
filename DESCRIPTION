@@ -15,7 +15,7 @@ Authors@R: c(
     person(given = "Xu", family = "Shi",
            email = "shixu@umich.edu", role = c("aut")))
 Maintainer: Stephen Salerno <ssalerno@fredhutch.org>
-Description: Estimates the population average controlled difference for a given outcome between levels of a binary treatment, exposure, or other group membership variable of interest for clustered, stratified survey samples where sample selection depends on the comparison group. Provides three methods for estimation, namely outcome modeling and two factorizations of inverse probability weighting. Under stronger assumptions, these methods estimate the causal population average treatment effect. Salerno et al., (2024) <doi:10.48550/arXiv.2406.19597> 
+Description: Estimates the population average controlled difference for a given outcome between levels of a binary treatment, exposure, or other group membership variable of interest for clustered, stratified survey samples where sample selection depends on the comparison group. Provides three methods for estimation, namely outcome modeling and two factorizations of inverse probability weighting. Under stronger assumptions, these methods estimate the causal population average treatment effect. Salerno et al., (2024) <doi:10.48550/arXiv.2406.19597>. 
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

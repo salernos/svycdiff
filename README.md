@@ -8,15 +8,10 @@
 [![R-CMD-check](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/salernos/svycdiff/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-A basic descriptive question in statistics asks whether there are
-differences in mean outcomes between groups based on levels of a
-discrete covariate (e.g., racial disparities in health outcomes,
-differences in opinion based on political party identification,
-heterogeneity in educational outcomes for students in urban vs. rural
-school districts, etc). When this categorical covariate of interest is
-correlated with other factors related to the outcome, however, direct
-comparisons may lead to erroneous estimates and invalid inferential
-conclusions without appropriate adjustment.
+Propensity score methods are broadly employed with observational data as
+a tool to achieve covariate balance, but how to implement them in
+complex surveys is less studied – in particular, when the survey weights
+depend on the group variable under comparison.
 
 In this package, we focus on the specific case when sample selection
 depends the comparison groups of interest. We implement identification
