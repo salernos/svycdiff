@@ -21,7 +21,7 @@ or under stronger assumptions, the *population average treatment effect
 covariate imbalance and generalizability.
 
 This packages also contains the code necessary to reproduce the
-motivation data analysis in *“What’s the weight? Estimating controlled
+motivating data analysis in *“What’s the weight? Estimating controlled
 outcome differences in complex surveys for health disparities
 research.”* This analysis focuses on data from the National Health and
 Nutrition Examination Survey (NHANES), investigating the interplay of
@@ -74,7 +74,12 @@ Once you have `svycdiff` installed, you can type
 vignette("svycdiff")
 ```
 
-in `R` to bring up a tutorial on `svycdiff` and how to use it.
+in `R` to bring up a tutorial on `svycdiff` and how to use it. To access
+the vignettes in the developer version, please install the package with
+
+``` r
+devtools::install_github("salernos/svycdiff", build_vignettes = TRUE)
+```
 
 ## Questions
 
