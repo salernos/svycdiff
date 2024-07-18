@@ -18,15 +18,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Using the svycdiff package">
-<meta property="og:description" content="svycdiff">
-<meta property="og:image" content="/logo.png">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -60,7 +58,7 @@
 <li>
   <a href="https://github.com/salernos/svycdiff/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul>
@@ -71,7 +69,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
@@ -79,7 +77,7 @@
       <h1 data-toc-skip>Using the svycdiff package</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/salernos/svycdiff/blob/HEAD/vignettes/svycdiff.Rmd" class="external-link"><code>vignettes/svycdiff.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/salernos/svycdiff/blob/master/vignettes/svycdiff.Rmd" class="external-link"><code>vignettes/svycdiff.Rmd</code></a></small>
       <div class="hidden name"><code>svycdiff.Rmd</code></div>
 
     </div>
@@ -112,60 +110,85 @@ health disparities research.”</em></p>
 <h3 id="population-parameters">Population Parameters<a class="anchor" aria-label="anchor" href="#population-parameters"></a>
 </h3>
 <p>In this first example, we provide an illustration of the method using
-simulated data. We first generate a superpopulation of <span class="math inline">\(N = 10,000\)</span> individuals from which we can
-repeatedly take weighted samples. The population parameters are as
-follows:</p>
+simulated data. We first generate a superpopulation of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>10</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">N = 10,000</annotation></semantics></math>
+individuals from which we can repeatedly take weighted samples. The
+population parameters are as follows:</p>
 <ul>
-<li>Let <span class="math inline">\(Y\)</span> denote a continuous
-(normal) outcome of interest</li>
-<li>Let <span class="math inline">\(A\)</span> denote the primary
-(binary) predictor of interest</li>
-<li>Let <span class="math inline">\(X\)</span> denote a set of
-predictors which relate to both <span class="math inline">\(Y\)</span>
-and <span class="math inline">\(A\)</span>
+<li>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+denote a continuous (normal) outcome of interest</li>
+<li>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+denote the primary (binary) predictor of interest</li>
+<li>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+denote a set of predictors which relate to both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
 </li>
 </ul>
-<p>In the context of this work, the sampling mechanism depends on <span class="math inline">\(A\)</span> and <span class="math inline">\(X\)</span>. For simplicity, we have reduced the
-set of covariates in <span class="math inline">\(X\)</span> to be a
-single, Normal random variable: <span class="math inline">\(X \sim N(1,
-1)\)</span>.</p>
+<p>In the context of this work, the sampling mechanism depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>.
+For simplicity, we have reduced the set of covariates in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+to be a single, Normal random variable:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">X \sim N(1, 1)</annotation></semantics></math>.</p>
 </div>
 <div class="section level3">
 <h3 id="data-generation">Data Generation<a class="anchor" aria-label="anchor" href="#data-generation"></a>
 </h3>
-<p>Population data corresponding to our independent predictor <span class="math inline">\(X\)</span> were first simulated. We then generated
-the rest of our data from three models: (1) the propensity model <span class="math inline">\((A \mid X)\)</span>, which characterized our
-primary predictor of interest, (2) the selection model, which defines
-the probability of inclusion into the sample given <span class="math inline">\(A\)</span> and <span class="math inline">\(X\)</span>, and (3) the outcome model <span class="math inline">\((Y \mid A, X)\)</span>, which characterizes the
-true distribution of the outcome.</p>
+<p>Population data corresponding to our independent predictor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+were first simulated. We then generated the rest of our data from three
+models: (1) the propensity model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo>∣</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(A \mid X)</annotation></semantics></math>,
+which characterized our primary predictor of interest, (2) the selection
+model, which defines the probability of inclusion into the sample given
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+and (3) the outcome model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>∣</mo><mi>A</mi><mo>,</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(Y \mid A, X)</annotation></semantics></math>,
+which characterizes the true distribution of the outcome.</p>
 <p><strong>Propensity Model</strong></p>
-<p>We denote the primary (binary) predictor, <span class="math inline">\(A\)</span>, as an indicator of the comparison
-groups of interest (e.g., treatment or exposure groups), and we simulate
-<span class="math inline">\(A\)</span> such that:</p>
-<p><span class="math display">\[A \mid  X \sim \text{Bin}(N,
-p_A)\]</span> <span class="math display">\[p_A = \text{logit}^{-1}(\tau
-X) = \frac{1}{1\ +\ \exp\{-(\tau X)\}}\]</span></p>
-<p>where we let <span class="math inline">\(\tau = 1\)</span>.</p>
+<p>We denote the primary (binary) predictor,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+as an indicator of the comparison groups of interest (e.g., treatment or
+exposure groups), and we simulate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+such that:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>∣</mo><mi>X</mi><mo>∼</mo><mtext mathvariant="normal">Bin</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo>,</mo><msub><mi>p</mi><mi>A</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A \mid  X \sim \text{Bin}(N, p_A)</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>A</mi></msub><mo>=</mo><msup><mtext mathvariant="normal">logit</mtext><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>τ</mi><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mspace width="0.222em"></mspace><mo>+</mo><mspace width="0.222em"></mspace><mo>exp</mo><mo stretchy="false" form="prefix">{</mo><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>τ</mi><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">p_A = \text{logit}^{-1}(\tau X) = \frac{1}{1\ +\ \exp\{-(\tau X)\}}</annotation></semantics></math></p>
+<p>where we let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau = 1</annotation></semantics></math>.</p>
 <p><strong>Selection Model</strong></p>
-<p>We denote the probability of being selected into the sample as <span class="math inline">\(p_S\)</span> and we simulate this probability such
-that:</p>
-<p><span class="math display">\[p_S = \text{logit}^{-1}[\beta_0
-+\beta_1(1 - A)\ +\ \beta_2 X] = \frac{1}{1\ +\ \exp\{-(\beta_0
-+\beta_1(1 - A)\ +\ \beta_2 X)\}}\]</span></p>
-<p>where <span class="math inline">\(\beta_0 = -3\)</span> and <span class="math inline">\(\beta_1 = \beta_2 = 1\)</span>. We further denote
-the observation/sampling weights for the study as <span class="math inline">\(\omega_S = p_S^{-1}\)</span>.</p>
+<p>We denote the probability of being selected into the sample as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>S</mi></msub><annotation encoding="application/x-tex">p_S</annotation></semantics></math>
+and we simulate this probability such that:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>S</mi></msub><mo>=</mo><msup><mtext mathvariant="normal">logit</mtext><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.222em"></mspace><mo>+</mo><mspace width="0.222em"></mspace><msub><mi>β</mi><mn>2</mn></msub><mi>X</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mspace width="0.222em"></mspace><mo>+</mo><mspace width="0.222em"></mspace><mo>exp</mo><mo stretchy="false" form="prefix">{</mo><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.222em"></mspace><mo>+</mo><mspace width="0.222em"></mspace><msub><mi>β</mi><mn>2</mn></msub><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">p_S = \text{logit}^{-1}[\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X] = \frac{1}{1\ +\ \exp\{-(\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X)\}}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mn>0</mn></msub><mo>=</mo><mo>−</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\beta_0 = -3</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>=</mo><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\beta_1 = \beta_2 = 1</annotation></semantics></math>.
+We further denote the observation/sampling weights for the study as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mi>S</mi></msub><mo>=</mo><msubsup><mi>p</mi><mi>S</mi><mrow><mo>−</mo><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">\omega_S = p_S^{-1}</annotation></semantics></math>.</p>
 <p><strong>Outcome Model</strong></p>
 <p>In generating the outcome, <em>we consider treatment
 heterogeneity</em>. Denote the outcome model as:</p>
-<p><span class="math display">\[Y = \gamma_0 + \gamma_1 X + \gamma_2 A +
-\gamma_3 A X + \varepsilon;
-\quad \varepsilon \sim N(0, 0.5)\]</span></p>
-<p>where <span class="math inline">\(\gamma_0 = \gamma_1 = \gamma_2 =
-1\)</span>, and <span class="math inline">\(\gamma_3 = 0.1\)</span>. Our
-quantity of interest is the average controlled difference (ACD), or
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><msub><mi>γ</mi><mn>0</mn></msub><mo>+</mo><msub><mi>γ</mi><mn>1</mn></msub><mi>X</mi><mo>+</mo><msub><mi>γ</mi><mn>2</mn></msub><mi>A</mi><mo>+</mo><msub><mi>γ</mi><mn>3</mn></msub><mi>A</mi><mi>X</mi><mo>+</mo><mi>ε</mi><mo>;</mo><mspace width="1.0em"></mspace><mi>ε</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y = \gamma_0 + \gamma_1 X + \gamma_2 A + \gamma_3 A X + \varepsilon;
+\quad \varepsilon \sim N(0, 0.5)</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>γ</mi><mn>0</mn></msub><mo>=</mo><msub><mi>γ</mi><mn>1</mn></msub><mo>=</mo><msub><mi>γ</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\gamma_0 = \gamma_1 = \gamma_2 = 1</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>γ</mi><mn>3</mn></msub><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\gamma_3 = 0.1</annotation></semantics></math>.
+Our quantity of interest is the average controlled difference (ACD), or
 under stronger assumptions, the population average treatment effect.
 Given the superpopulation generated according to the models above, we
-then take a random sample by generating a sampling indicator <span class="math inline">\(S\ |\ A, X \sim \text{Bin}(N,\ p_s)\)</span>:</p>
+then take a random sample by generating a sampling indicator
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">|</mo><mspace width="0.222em"></mspace><mi>A</mi><mo>,</mo><mi>X</mi><mo>∼</mo><mtext mathvariant="normal">Bin</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo>,</mo><mspace width="0.222em"></mspace><msub><mi>p</mi><mi>s</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">S\ |\ A, X \sim \text{Bin}(N,\ p_s)</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co">#-- Set Seed for Random Number Generation</span></span>
@@ -278,9 +301,7 @@ analysis results for the main paper, see
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -293,16 +314,16 @@ analysis results for the main paper, see
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>
