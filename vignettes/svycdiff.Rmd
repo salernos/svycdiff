@@ -45,8 +45,6 @@ We denote the primary (binary) predictor, $A$, as an indicator of the comparison
 $$A \mid  X \sim \text{Bin}(N, p_A)$$ 
 $$p_A = \text{logit}^{-1}(\tau X) = \frac{1}{1\ +\ \exp\{-(\tau X)\}}$$
 
-\vspace{2ex}
-
 where we let $\tau = 1$.
   
 **Selection Model**
@@ -54,8 +52,6 @@ where we let $\tau = 1$.
 We denote the probability of being selected into the sample as $p_S$ and we simulate this probability such that:
   
 $$p_S = \text{logit}^{-1}[\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X] = \frac{1}{1\ +\ \exp\{-(\beta_0 +\beta_1(1 - A)\ +\ \beta_2 X)\}}$$
-
-\vspace{2ex}
 
 where $\beta_0 = -3$ and $\beta_1 = \beta_2 = 1$. We further denote the observation/sampling weights for the study as $\omega_S = p_S^{-1}$.
 
