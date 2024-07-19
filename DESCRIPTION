@@ -31,6 +31,8 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown,
-    markdown
+    markdown,
+    spelling
 URL: https://github.com/salernos/svycdiff, https://salernos.github.io/svycdiff/
 BugReports: https://github.com/salernos/svycdiff/issues
+Language: en-US
