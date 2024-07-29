@@ -147,7 +147,7 @@ svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
   df1 <- df; df1[[a_form[[2]]]] <- 1
   df0 <- df; df0[[a_form[[2]]]] <- 0
 
-  S_known <- ifelse(s_form[[3]] == 1, T, F)
+  S_known <- ifelse(s_form[[3]] == 1, TRUE, FALSE)
 
   #-- ASSERTIONS
 

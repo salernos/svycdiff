@@ -48,7 +48,7 @@ source(here("R", "sim.R"))
 
 library(pacman)
 
-p_load(progressr, doFuture, numDeriv, betareg, survey, gt, update = F)
+p_load(progressr, doFuture, numDeriv, betareg, survey, gt, update = FALSE)
 
 #--- HELPER FUNCTIONS ----------------------------------------------------------
 
@@ -126,13 +126,13 @@ for(i in 1:length(results)) {
 
   gamma_AX  <- gamma_AX_vec[i]
 
-  dat <- simdat(N, X_dist = "continuous", S_known = F,
+  dat <- simdat(N, X_dist = "continuous", S_known = FALSE,
 
     tau_0 = -1, tau_X = 1,
 
     beta_0 = -4.5, beta_A = 1, beta_X = 1,
 
-    hetero = T, alpha_0 = 1, alpha_X = 1, alpha_A = 1, alpha_AX = gamma_AX)
+    hetero = TRUE, alpha_0 = 1, alpha_X = 1, alpha_A = 1, alpha_AX = gamma_AX)
 
   ate <- dat$ATE[1]
 
@@ -148,7 +148,7 @@ for(i in 1:length(results)) {
 
       .combine = "rbind", .errorhandling = "pass",
 
-      .options.future = list(seed = T)) %dofuture% {
+      .options.future = list(seed = TRUE)) %dofuture% {
 
       p()
 

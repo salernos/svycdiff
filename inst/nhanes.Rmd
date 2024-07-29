@@ -14,12 +14,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = F}
-
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   
-  collapse = T, warning = F, error = F, message = F, comment = NA, cache = T)
-
+  collapse = TRUE, warning = FALSE, error = FALSE, message = FALSE, 
+  
+  comment = NA, cache = TRUE)
 ```
 
 This vignette introduces an example analysis using data from the publicly-available National Health and Nutrition Examination Survey (NHANES). NHANES is a nationally representative sample, collected by the Centers for Disease Control, which contains a wealth of data from demographic and socioeconomic questionnaires, nutrition and medical records, and physiological and laboratory measurements on individuals.
@@ -44,7 +44,7 @@ library(pacman)
 
 p_load(survey, betareg, DescTools, numDeriv, ggsci, gt, gtsummary,
        
-  here, tidyverse, update = F) 
+  here, tidyverse, update = FALSE) 
 
 theme_gtsummary_compact()
 
@@ -192,13 +192,13 @@ FIG1_ACD <- TAB1_DAT_ACD |>
 
       nudge_x = 0.15, size = 3.5, fontface = "bold") +
   
-    scale_fill_viridis_b(guide = F) +
+    scale_fill_viridis_b(guide = FALSE) +
 
-    scale_color_viridis_b(guide = F) +
+    scale_color_viridis_b(guide = FALSE) +
 
-    scale_fill_jama(guide = F) +
+    scale_fill_jama(guide = FALSE) +
 
-    scale_color_jama(guide = F) +
+    scale_color_jama(guide = FALSE) +
 
     labs(
 
@@ -264,7 +264,7 @@ fit_a_acd <- glm(a_mod_acd, "binomial", NHANES2)
 
 pscore_acd <- predict(fit_a_acd, NHANES2, "response")
 
-TAB2a_ACD <- tbl_regression(fit_a_acd, TAB2_LABS_ACD, exponentiate = T) |>
+TAB2a_ACD <- tbl_regression(fit_a_acd, TAB2_LABS_ACD, exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
@@ -288,7 +288,9 @@ wtd_fit_a_acd <- svyglm(a_mod_acd, family = quasibinomial(),
 
 wtd_pscore_acd <- predict(wtd_fit_a_acd, data = NHANES2, type = "response")
 
-TAB2b_ACD <- tbl_regression(wtd_fit_a_acd, TAB2_LABS_ACD, exponentiate = T) |>
+TAB2b_ACD <- tbl_regression(wtd_fit_a_acd, TAB2_LABS_ACD, 
+                            
+  exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
@@ -397,9 +399,9 @@ res_iptw_acd <- c(est = fit_iptw_acd, err = err_iptw_acd)
 
 #--- SURVEY-WEIGHTED MULTIPLE REGRESSION ---------------------------------------
 
-des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ WTMEC4YR, data = NHANES2)
+des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                          
+  nest = TRUE, weights = ~ WTMEC4YR, data = NHANES2)
 
 fit_svywtdlm_acd <- svyglm(y_mod_acd, design = des_svywtdlm)
 
@@ -413,9 +415,9 @@ res_iptwlm_acd <- summary(fit_iptwlm_acd)$coefficients[2, 1:2]
 
 #--- IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION --------------------------------
 
-des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ comb_wt, data = NHANES2)
+des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                            
+  nest = TRUE, weights = ~ comb_wt, data = NHANES2)
 
 fit_pssvywtdlm_acd <- svyglm(y_mod_acd, design = des_pssvywtdlm)
 
@@ -423,9 +425,9 @@ res_pssvywtdlm_acd <- summary(fit_pssvywtdlm_acd)$coefficients[2, 1:2]
 
 #--- WEIGHTED IPTW + SURVEY WEIGHTED MULTIPLE REGRESSION -----------------------
 
-des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ wtd_comb_wt, data = NHANES2)
+des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                               
+  nest = TRUE, weights = ~ wtd_comb_wt, data = NHANES2)
 
 fit_wtdpssvywtdlm_acd <- svyglm(y_mod_acd, design = des_wtdpssvywtdlm)
 
@@ -591,13 +593,13 @@ FIG1_ATE <- TAB1_DAT_ATE |>
 
       nudge_x = 0.15, size = 3.5, fontface = "bold") +
   
-    scale_fill_viridis_b(guide = F) +
+    scale_fill_viridis_b(guide = FALSE) +
 
-    scale_color_viridis_b(guide = F) +
+    scale_color_viridis_b(guide = FALSE) +
 
-    scale_fill_jama(guide = F) +
+    scale_fill_jama(guide = FALSE) +
 
-    scale_color_jama(guide = F) +
+    scale_color_jama(guide = FALSE) +
 
     labs(
 
@@ -669,13 +671,13 @@ pscore_ate <- predict(fit_a_ate, NHANES3, "response")
 
 pscore_ate2 <- predict(fit2_a_ate, NHANES3, "response")
 
-TAB2a_ATE <- tbl_regression(fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
+TAB2a_ATE <- tbl_regression(fit_a_ate, TAB2_LABS_ATE, exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
   modify_caption("Results from unweighted propensity score model")
 
-TAB2a_ATE2 <- tbl_regression(fit2_a_ate, TAB2_LABS2_ATE, exponentiate = T) |>
+TAB2a_ATE2 <- tbl_regression(fit2_a_ate, TAB2_LABS2_ATE, exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
@@ -711,7 +713,9 @@ wtd_pscore_ate <- predict(wtd_fit_a_ate, data = NHANES3, type = "response")
 
 wtd_pscore_ate2 <- predict(wtd_fit2_a_ate, data = NHANES3, type = "response")
 
-TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
+TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, 
+                            
+  exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
@@ -719,7 +723,7 @@ TAB2b_ATE <- tbl_regression(wtd_fit_a_ate, TAB2_LABS_ATE, exponentiate = T) |>
 
 TAB2b_ATE2 <- tbl_regression(wtd_fit2_a_ate, TAB2_LABS2_ATE, 
                              
-  exponentiate = T) |>
+  exponentiate = TRUE) |>
 
   bold_p() |> bold_labels() |>
 
@@ -874,7 +878,7 @@ res_iptw_ate2 <- c(est = fit2_iptw_ate, err = err_iptw_ate2)
 
 #--- SURVEY-WEIGHTED MULTIPLE REGRESSION ---------------------------------------
 
-des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
+des_svywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = TRUE,
                         
   weights = ~ WTMEC4YR, data = NHANES3)
 
@@ -900,9 +904,9 @@ res_iptwlm_ate2 <- summary(fit_iptwlm_ate2)$coefficients[2, 1:2]
 
 #-- W/O Race in Propensity Model
 
-des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ comb_wt, data = NHANES3)
+des_pssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                            
+  nest = TRUE, weights = ~ comb_wt, data = NHANES3)
 
 fit_pssvywtdlm_ate <- svyglm(y_mod_ate, design = des_pssvywtdlm)
 
@@ -910,9 +914,9 @@ res_pssvywtdlm_ate <- summary(fit_pssvywtdlm_ate)$coefficients[2, 1:2]
 
 #-- W/ Race in Propensity Model
 
-des_pssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ comb_wt2, data = NHANES3)
+des_pssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                             
+  nest = TRUE, weights = ~ comb_wt2, data = NHANES3)
 
 fit_pssvywtdlm_ate2 <- svyglm(y_mod_ate, design = des_pssvywtdlm2)
 
@@ -922,9 +926,9 @@ res_pssvywtdlm_ate2 <- summary(fit_pssvywtdlm_ate2)$coefficients[2, 1:2]
 
 #-- W/O Race in Propensity Model
 
-des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ wtd_comb_wt, data = NHANES3)
+des_wtdpssvywtdlm <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                               
+  nest = TRUE, weights = ~ wtd_comb_wt, data = NHANES3)
 
 fit_wtdpssvywtdlm_ate <- svyglm(y_mod_ate, design = des_wtdpssvywtdlm)
 
@@ -932,9 +936,9 @@ res_wtdpssvywtdlm_ate <- summary(fit_wtdpssvywtdlm_ate)$coefficients[2, 1:2]
 
 #-- W Race in Propensity Model
 
-des_wtdpssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, nest = T,
-                        
-  weights = ~ wtd_comb_wt2, data = NHANES3)
+des_wtdpssvywtdlm2 <- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, 
+                              
+  nest = TRUE, weights = ~ wtd_comb_wt2, data = NHANES3)
 
 fit_wtdpssvywtdlm_ate2 <- svyglm(y_mod_ate, design = des_wtdpssvywtdlm2)
 
@@ -1000,8 +1004,3 @@ NHANES_RESULTS_ATE |> as_tibble() |>
 #=== END =======================================================================
 
 ```
-
-
-
-
-

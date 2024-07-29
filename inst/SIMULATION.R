@@ -48,7 +48,7 @@
 
 library(pacman)
 
-p_load(progressr, doFuture, numDeriv, betareg, survey, gt, here, update = F)
+p_load(progressr, doFuture, numDeriv, betareg, survey, gt, here, update = FALSE)
 
 #--- SOURCE FUNCTIONS ----------------------------------------------------------
 
@@ -234,13 +234,13 @@ for(i in 1:length(results)) {
 
   beta_X <- settings[i, 3]
 
-  dat <- simdat(N, X_dist = "continuous", S_known = F,
+  dat <- simdat(N, X_dist = "continuous", S_known = FALSE,
 
     tau_0 = -1, tau_X = tau_X,
 
     beta_0 = -4.5, beta_A = beta_A, beta_X = beta_X,
 
-    hetero = T, alpha_0 = 1, alpha_X = 1, alpha_A = 1, alpha_AX = 0.1)
+    hetero = TRUE, alpha_0 = 1, alpha_X = 1, alpha_A = 1, alpha_AX = 0.1)
 
   ate <- dat$ATE[1]
 
@@ -256,7 +256,7 @@ for(i in 1:length(results)) {
 
       .combine = "rbind", .errorhandling = "pass",
 
-      .options.future = list(seed = T)) %dofuture% {
+      .options.future = list(seed = TRUE)) %dofuture% {
 
       p()
 

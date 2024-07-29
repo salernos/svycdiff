@@ -103,11 +103,11 @@
 #' head(dat)
 #'
 #' @export
-simdat <- function(N, X_dist = "continuous", S_known = F,
+simdat <- function(N, X_dist = "continuous", S_known = FALSE,
 
   tau_0 = 0, tau_X = 1, beta_0 = 0, beta_A = 1, beta_X = 1,
 
-  hetero = T, alpha_0 = 0, alpha_X = 1, alpha_A = 1, alpha_AX = 0.1) {
+  hetero = TRUE, alpha_0 = 0, alpha_X = 1, alpha_A = 1, alpha_AX = 0.1) {
 
   #-- Covariate
 

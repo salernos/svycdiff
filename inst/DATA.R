@@ -35,7 +35,7 @@
 
 library(pacman)
 
-p_load(nhanesA, here, tidyverse, update = F)
+p_load(nhanesA, here, tidyverse, update = FALSE)
 
 #--- READ-IN DATA --------------------------------------------------------------
 
@@ -97,7 +97,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
       RIDRETH1 == "Non-Hispanic Black" ~ 1,
 
-      T ~ NA_real_),
+      TRUE ~ NA_real_),
 
     #- Age
 
@@ -121,7 +121,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
       DMDEDUC2 == "College Graduate or above" ~ 2,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:2, c("High School or GED", "Some College", "College Graduate")),
 
@@ -135,7 +135,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
       DMDMARTL %in% c("Married", "Living with partner") ~ 2,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:2, c("Never Married", "Widowed/Divorced/Separated",
 
@@ -155,7 +155,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
       DMDHHSIZ %in% 5:7 ~ 4,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:4, c("1 Person", paste(c(2:4, "5+"), "People"))),
 
@@ -175,7 +175,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
       INDHHINC == "$75,000 and Over" ~ 4,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:4, c("$0 - $20,000", "$20,000 - $35,000", "$35,000 - $55,000",
 
@@ -183,7 +183,7 @@ DEMO <- bind_rows(DEMO_A, DEMO_B) |>
 
     #- Poverty Income Ratio
 
-    PIR_3CAT = cut(INDFMPIR, right = F, breaks = c(-Inf, 1.3, 3.5, Inf),
+    PIR_3CAT = cut(INDFMPIR, right = FALSE, breaks = c(-Inf, 1.3, 3.5, Inf),
 
       labels = c("< 1.3", "1.3 <= PIR < 3.5", ">= 3.5")) |>
 
@@ -225,7 +225,7 @@ OCQ <- bind_rows(OCQ_A, OCQ_B) |>
 
         "Not working at a job or business?")) ~ 3,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:3, c("Full-Time", "Part-Time", "Retired", "Not Working")),
 
@@ -243,7 +243,7 @@ OCQ <- bind_rows(OCQ_A, OCQ_B) |>
 
       OCD390 %in% c(98) ~ NA_real_,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:4, c("No Work", "Low Blue Collar", "High Blue Collar",
 
@@ -265,7 +265,7 @@ FSQ <- bind_rows(FSQ_A, FSQ_B) |>
 
       FSD160 == "Yes" ~ 1,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:1, c("No WIC", "Received WIC")),
 
@@ -273,7 +273,7 @@ FSQ <- bind_rows(FSQ_A, FSQ_B) |>
 
     FDSEC_3CAT = case_when(HHFDSEC == 1 ~ 0, HHFDSEC == 2 ~ 1,
 
-      HHFDSEC %in% 3:4 ~ 2, T ~ NA_real_) |>
+      HHFDSEC %in% 3:4 ~ 2, TRUE ~ NA_real_) |>
 
       factor(0:2, c("Food Secure", "Marginally Food Secure", "Food Insecure")))
 
@@ -291,7 +291,7 @@ HOQ <- bind_rows(HOQ_A, HOQ_B) |>
 
       HOQ065 == "Owned or being bought" ~ 1,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:1, c("Does Not Own Home", "Owns Home")),
 
@@ -309,7 +309,7 @@ HOQ <- bind_rows(HOQ_A, HOQ_B) |>
 
         "Dormitory? ") ~ 3,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:3, c("Family Home Detached", "Family Home Attached",
 
@@ -329,7 +329,7 @@ HIQ <- bind_rows(HIQ_A, HIQ_B) |>
 
       HID010 == "Yes" ~ 1,
 
-      T ~ NA_real_) |>
+      TRUE ~ NA_real_) |>
 
       factor(0:1, c("Not Insured", "Insured")))
 

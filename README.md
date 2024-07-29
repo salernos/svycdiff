@@ -17,7 +17,7 @@ In this package, we focus on the specific case when sample selection
 depends the comparison groups of interest. We implement identification
 formulas to properly estimate the *average controlled difference (ACD)*,
 or under stronger assumptions, the *population average treatment effect
-(ATE)* in outcomes between groups, with appropriate weighting for
+(ATE)* in outcomes between groups, with appropriate weighting for both
 covariate imbalance and generalizability.
 
 This packages also contains the code necessary to reproduce the

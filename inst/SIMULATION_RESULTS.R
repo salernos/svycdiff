@@ -40,7 +40,7 @@
 
 library(pacman)
 
-p_load(here, gt, ggsci, patchwork, ggraph, tidygraph, tidyverse, update = F)
+p_load(here, gt, ggsci, patchwork, ggraph, tidygraph, tidyverse, update = FALSE)
 
 #--- SIMULATION PARAMETERS -----------------------------------------------------
 
@@ -413,7 +413,7 @@ simset_plt <- ggplot(data = simset_tab) + theme_bw() + coord_flip() +
 
   geom_text(data = simset_tab, aes(x = name, y = y, label = value),
 
-    parse = T, size = 3) +
+    parse = TRUE, size = 3) +
 
   geom_vline(xintercept = c(1.5, 2.5, 3.5)) +
 
