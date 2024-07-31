@@ -295,6 +295,4 @@ for(i in 1:length(results)) {
 
 toc <- proc.time(); toc - tic
 
-save(results, file = here("inst", "SENSITIVITY_RESULTS.RData"))
-
 #=== END =======================================================================

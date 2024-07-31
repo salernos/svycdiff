@@ -387,6 +387,4 @@ NHANES <- TELO |>
 
     LBXBPB_LOD)
 
-save(NHANES, file = here("data", "NHANES.rda"))
-
 #=== END =======================================================================

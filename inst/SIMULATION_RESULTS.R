@@ -155,8 +155,6 @@ sim_all_gt <- results_summary_all |>
 
 sim_all_gt
 
-gtsave(sim_all_gt, here("inst", "simulation_results.html"))
-
 gt_labs <- apply(settings, 1, function(i) {
 
   paste(c("\U1D70F\U2093 =", "\U03B2\U2090 =", "\U03B2\U2093 ="), i) }) |>
@@ -355,8 +353,6 @@ diagram <- dag_plt_8 + dag_plt_acd + dag_plt_ate +
 
   plot_annotation(tag_levels = 'A')
 
-ggsave(here("inst", "diagram.png"), diagram, height = 5, width = 15)
-
 #--- SIMULATION SETTING TABLE --------------------------------------------------
 
 rect_dat <- data.frame(
@@ -525,8 +521,6 @@ sim_plot <- dag_plt / simset_plt / simbias_plt / simcov_plt +
 
 sim_plot
 
-ggsave(here("inst", "simulation_results.png"), height = 10, width = 20)
-
 #=== SENSITIVITY ANALYSIS ======================================================
 
 load(here("inst", "SENSITIVITY_RESULTS.RData"))
@@ -623,7 +617,5 @@ sens_all_gt <- results_sens_all |>
     locations = cells_column_labels())
 
 sens_all_gt
-
-gtsave(sens_all_gt, here("inst", "sensitivity_results.html"))
 
 #=== END =======================================================================
