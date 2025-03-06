@@ -315,6 +315,65 @@ TAB2_ACD
 
 ```
 
+```{r smd}
+
+## SS: Added 2024.10.30
+
+library(cobalt); library(WeightIt)
+
+W_out <- weightit(a_mod_acd, data = NHANES2, 
+                  
+  method = "glm", estimand = "ATE")
+
+W_bal <- bal.tab(W_out)
+
+smd_plot_vars <- row.names(W_bal$Balance)
+
+clean_varnames <- smd_plot_vars |>  
+  
+  (\(x) { gsub(pattern = "prop.score",    replacement = "Propensity Score",                x = x) })() |>
+  (\(x) { gsub(pattern = "EDUC_3CAT_",    replacement = "Education: ",                     x = x) })() |>
+  (\(x) { gsub(pattern = "MARTL_3CAT_",   replacement = "Marital Status: ",                x = x) })() |>
+  (\(x) { gsub(pattern = "HHSIZE_5CAT_",  replacement = "Household Size: ",                x = x) })() |>
+  (\(x) { gsub(pattern = "HHINC_5CAT_",   replacement = "Household Income: ",              x = x) })() |>
+  (\(x) { gsub(pattern = "PIR_3CAT_",     replacement = "Poverty Income Ratio Category: ", x = x) })() |>
+  (\(x) { gsub(pattern = "EMPSTAT_4CAT_", replacement = "Employment Status: ",             x = x) })() |>
+  (\(x) { gsub(pattern = "OCC_5CAT_",     replacement = "Occupation Category: ",           x = x) })() |>
+  (\(x) { gsub(pattern = "WIC_2CAT_",     replacement = "WIC Utilization: ",               x = x) })() |>
+  (\(x) { gsub(pattern = "FDSEC_3CAT_",   replacement = "Food Security Status: ",          x = x) })() |>
+  (\(x) { gsub(pattern = "HOD_4CAT_",     replacement = "Home Type: ",                     x = x) })() |>
+  (\(x) { gsub(pattern = "OWNHOME_2CAT_", replacement = "Home Ownership: ",                x = x) })() |>
+  (\(x) { gsub(pattern = "HIQ_2CAT_",     replacement = "Insurance Status: ",              x = x) })()
+
+v_dat <- data.frame(old = smd_plot_vars, new = clean_varnames)
+
+love.plot(W_out, stats = c("mean.diffs", "ks.statistics"),
+          
+  threshold = c(m = 0.1, ks = 0.1), binary = "std", abs = TRUE, 
+  
+  var.order = "unadjusted", var.names = v_dat, limits = c(0, 1),
+  
+  shapes = c("circle", "triangle"), colors = c("#00274C", "#2F65A7"))
+
+wtd_W_out <- weightit(a_mod_acd, data = NHANES2, 
+                      
+  method = "glm", estimand = "ATE", s.weights = "WTMEC4YR")
+
+wtd_W_bal <- bal.tab(wtd_W_out)
+
+wtd_W_bal
+
+love.plot(wtd_W_out, stats = c("mean.diffs", "ks.statistics"),
+          
+  threshold = c(m = 0.1, ks = 0.1), binary = "std", abs = TRUE, 
+  
+  var.order = "unadjusted", var.names = v_dat, limits = c(0, 1),
+  
+  shapes = c("circle", "triangle"), colors = c("#00274C", "#2F65A7"))
+
+```
+
+
 ```{r tab3_acd}
 
 #=== SAMPLE SELECTION ANALYSIS =================================================
