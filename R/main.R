@@ -9,14 +9,7 @@
 #           average treatment effect (ATE) in complex surveys where
 #           selection depends on the comparison group of interest.
 #
-#  UPDATED: 2024-05-25
-#
-#  NOTES:
-#
-#    - Future Updates:
-#
-#        1. Allow Different Families for Y | A, X
-#        2. Better Way to Allow for Known S | A, X
+#  UPDATED: 2025-04-22
 #
 #===============================================================================
 
@@ -35,34 +28,34 @@
 #'
 #' @details
 #'
-#' The argument \code{id_form} takes possible values "OM", "IPW1", or "IPW2",
-#' corresponding to the three formulas presented in Salerno et al. "OM" refers
-#' to the method that uses outcome modeling and direct standardization to
-#' estimate the controlled difference, while IPW1 and IPW2 are inverse
-#' probability weighted methods. IPW1 and IPW2 differ with respect to how the
-#' joint propensity and selection mechanisms are factored (see Salerno et al.
-#' for additional details). "OM", "IPW1", or "IPW2" are useful in different
-#' settings, which warrants some brief discussion here. "OM" requires you to
-#' specify an outcome regression model, whereas "IPW1" and "IPW2" do not
-#' require estimation, nor do they assume additivity or interactivity. However,
-#' while OM, IPW1, and IPW2 are consistent, OM is most efficient if correctly
-#' specified.
+#' The argument \code{id_form} takes possible values \code{"OM"},
+#' \code{"IPW1"}, \code{"IPW2"}, or \code{"DR"}, corresponding to the four
+#' formulas presented in Salerno et al. \code{"OM"} refers to the method that
+#' uses outcome modeling and direct standardization to estimate the controlled
+#' difference, while \code{"IPW1"} and \code{"IPW2"} are inverse probability
+#' weighted methods. \code{"IPW1"} and \code{"IPW2"} differ with respect to how
+#' the joint propensity and selection mechanisms are factored (see Salerno et
+#' al. for additional details). \code{"DR"} refers to the doubly robust form of
+#' estimator, which essentially combines \code{"OM"} and \code{"IPW2"}.
 #'
-#' For IPW1/IPW2, \code{y_form} should be of the form \code{Y ~ 1}.
+#' For \code{id_form = "IPW1"} or \code{id_form = "IPW2"}, \code{y_form} should
+#' be of the form \code{Y ~ 1}.
 #'
-#' For known S, \code{s_form} should be of the form \code{S ~ 1}, where
-#' \code{S} is the variable corresponding to the probability of selection.
-#' There should be two additional variables in the dataset: P_S_cond_A1X and
-#' P_S_cond_A0X, corresponding to the known probability of selection
-#' conditional on A = 1 or 0 and X = x, respectively. If these quantities are
-#' not known, s_form should contain the variables which affect sample selection
-#' on the right hand side of the equation, including the comparison group
-#' variable of interest.
+#' For known selection mechanisms, \code{s_form} should be of the form
+#' \code{pS ~ 1}, where \code{pS} is the variable corresponding to the
+#' probability of selection (e.g., inverse of the selection weight), and there
+#' should be two additional variables in the dataset: \code{P_S_cond_A1X} and
+#' \code{P_S_cond_A0X}, corresponding to the known probability of selection
+#' conditional on \eqn{A = 1} or \eqn{0} and \eqn{X = x}, respectively. If
+#' these quantities are not known, \code{s_form} should contain the variables
+#' which affect sample selection on the right hand side of the equation,
+#' including the comparison group variable of interest.
 #'
-#' @param df a data frame or tibble containing the variables in the models.
+#' @param df a `data.frame` or `tibble` containing the variables in the models.
 #'
-#' @param id_form a string indicating which identification formula to be used.
-#' Options include "OM", "IPW1", or "IPW2". See 'Details' for more information.
+#' @param id_form a `string` indicating which identification formula to be used.
+#' Options include \code{"OM"}, \code{"IPW1"}, \code{"IPW2"}, or \code{"DR"}.
+#' See 'Details' for information.
 #'
 #' @param a_form an object of class `formula` which describes the propensity
 #' score model to be fit.
@@ -71,15 +64,17 @@
 #' model to be fit.
 #'
 #' @param y_form an object of class `formula` which describes the outcome model
-#' to be fit. Only used if `id_form` = "OM", else `y_form = y ~ 1`.
+#' to be fit. Only used if \code{id_form = "OM"}, else \code{y_form = y ~ 1}.
 #'
-#' @param y_fam a family function. Only used if `id_form` = "OM", else
-#' `y_fam = NULL`.
+#' @param y_fam a `family` function. Only used if \code{id_form = "OM"}, else
+#' \code{y_fam = NULL}. Current options include \code{gaussian},
+#' \code{binomial}, or \code{poisson}.
 #'
-#' @param strata a string indicating strata, else `strata = NULL` for no strata.
+#' @param strata a `string` indicating strata, else \code{strata = NULL}
+#' for no strata.
 #'
-#' @param cluster a string indicating cluster IDs, else `cluster = NULL` for no
-#' clusters.
+#' @param cluster a `string` indicating cluster IDs, else \code{cluster = NULL}
+#' for no clusters.
 #'
 #' @returns `svycdiff` returns an object of class "svycdiff" which contains:
 #'
@@ -105,17 +100,17 @@
 #'
 #' dat <- simdat(N)
 #'
-#' S <- rbinom(N, 1, dat$P_S_cond_AX)
+#' S <- rbinom(N, 1, dat$pS)
 #'
 #' samp <- dat[S == 1,]
 #'
-#' y_mod <- Y ~ A * X
+#' y_mod <- Y ~ A * X1
 #'
-#' a_mod <- A ~ X
+#' a_mod <- A ~ X1
 #'
-#' s_mod <- P_S_cond_AX ~ A + X
+#' s_mod <- pS ~ A + X1
 #'
-#' fit <- svycdiff(samp, "OM", a_mod, s_mod, y_mod, "gaussian")
+#' fit <- svycdiff(samp, "DR", a_mod, s_mod, y_mod, "gaussian")
 #'
 #' fit
 #'
@@ -130,9 +125,14 @@
 #' @importFrom stats coef glm lm model.matrix qlogis plogis pnorm predict qnorm
 #'
 #' @export
-svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
-
-  strata = NULL, cluster = NULL) {
+svycdiff <- function(df,
+                     id_form,
+                     a_form,
+                     s_form,
+                     y_form,
+                     y_fam = NULL,
+                     strata = NULL,
+                     cluster = NULL) {
 
   #--- SETUP -------------------------------------------------------------------
 
@@ -151,9 +151,9 @@ svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
 
   #-- ASSERTIONS
 
-  if (is.null(y_fam) & id_form == "OM") {
+  if (id_form == "OM" || id_form == "DR") {
 
-    stop("Must supply `y_fam` when `id_form` is 'OM'.")
+    if (is.null(y_fam)) stop("Must supply `y_fam` for OM or DR.")
   }
 
   if (y_form[[3]] == 1) {
@@ -161,15 +161,7 @@ svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
     fit_y <- NULL
   }
 
-  if (!is.numeric(aa)) {
-
-    stop("`A` must be numeric.")
-  }
-
-  if (length(setdiff(0:1, unique(aa))) != 0) {
-
-    stop("`A` must be coded 0/1.")
-  }
+  if (!all(aa %in% c(0,1))) stop("`A` must be coded 0/1.")
 
   #--- FIT COMMON MODELS -------------------------------------------------------
 
@@ -230,9 +222,9 @@ svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
 
     fit_y <- glm(y_form, family = y_fam, data = df)
 
-    m0 <- predict(fit_y, newdata = df0)
+    m0 <- predict(fit_y, newdata = df0, type = "response")
 
-    m1 <- predict(fit_y, newdata = df1)
+    m1 <- predict(fit_y, newdata = df1, type = "response")
 
     est <- mean((m1 - m0)/P_S1_cond_X)*P_S1
 
@@ -291,9 +283,40 @@ svycdiff <- function(df, id_form, a_form, s_form, y_form, y_fam = NULL,
         length(coef(fit_a)), length(coef(wtd_fit_a)), length(coef(fit_s)), 1)
     }
 
+  } else if (id_form == "DR") {
+
+    fit_y <- glm(y_form, family = y_fam, data = df)
+
+    m1 <- predict(fit_y, newdata = df1, type = "response")
+
+    m0 <- predict(fit_y, newdata = df0, type = "response")
+
+    mu1 <- (m1 + aa * (yy - m1) / P_A1_cond_X)
+
+    mu0 <- (m0 + (1 - aa) * (yy - m0) / (1 - P_A1_cond_X))
+
+    est <- mean((mu1 - mu0)/P_S1_cond_X)*P_S1
+
+    if (S_known) {
+
+      ests <- c(coef(fit_a), coef(wtd_fit_a), coef(fit_y), cdiff = est)
+
+      ests_dims <- c(length(coef(wtd_fit_a)), length(coef(fit_y)), 1)
+
+    } else {
+
+      ests <- c(coef(fit_a), coef(wtd_fit_a), coef(fit_s),
+
+        coef(fit_y), cdiff = est)
+
+      ests_dims <- c(length(coef(fit_a)), length(coef(wtd_fit_a)),
+
+        length(coef(fit_s)), length(coef(fit_y)), 1)
+    }
+
   } else {
 
-    stop("id_form must be one of `OM`, `IPW1`, or `IPW2`")
+    stop("id_form must be one of 'OM', 'IPW1', 'IPW2', or 'DR'")
   }
 
   #--- INFERENCE ---------------------------------------------------------------

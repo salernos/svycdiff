@@ -51,17 +51,17 @@ N <- 1000
 
 dat <- simdat(N)
 
-S <- rbinom(N, 1, dat$P_S_cond_AX)
+S <- rbinom(N, 1, dat$pS)
 
 samp <- dat[S == 1,]
 
-y_mod <- Y ~ A * X
+y_mod <- Y ~ A * X1
 
-a_mod <- A ~ X
+a_mod <- A ~ X1
 
-s_mod <- P_S_cond_AX ~ A + X
+s_mod <- pS ~ A + X1
 
-fit <- svycdiff(samp, "OM", a_mod, s_mod, y_mod, "gaussian")
+fit <- svycdiff(samp, "DR", a_mod, s_mod, y_mod, "gaussian")
 
 fit
 ```
@@ -89,3 +89,32 @@ differences in complex surveys for health disparities research.”* To
 reproduce the analysis results for the main paper, see
 `inst/nhanes.Rmd`. For questions and comments, please contact Stephen
 Salerno (<ssalerno@fredhutch.org>).
+
+``` r
+sessionInfo()
+#> R version 4.4.1 (2024-06-14 ucrt)
+#> Platform: x86_64-w64-mingw32/x64
+#> Running under: Windows 11 x64 (build 22631)
+#> 
+#> Matrix products: default
+#> 
+#> 
+#> locale:
+#> [1] LC_COLLATE=English_United States.utf8 
+#> [2] LC_CTYPE=English_United States.utf8   
+#> [3] LC_MONETARY=English_United States.utf8
+#> [4] LC_NUMERIC=C                          
+#> [5] LC_TIME=English_United States.utf8    
+#> 
+#> time zone: America/New_York
+#> tzcode source: internal
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] compiler_4.4.1    fastmap_1.2.0     cli_3.6.3         tools_4.4.1      
+#>  [5] htmltools_0.5.8.1 rstudioapi_0.17.1 yaml_2.3.10       rmarkdown_2.29   
+#>  [9] knitr_1.50        xfun_0.52         digest_0.6.37     rlang_1.1.4      
+#> [13] evaluate_1.0.3
+```

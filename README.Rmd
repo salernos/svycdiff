@@ -50,17 +50,17 @@ N <- 1000
 
 dat <- simdat(N)
 
-S <- rbinom(N, 1, dat$P_S_cond_AX)
+S <- rbinom(N, 1, dat$pS)
 
 samp <- dat[S == 1,]
 
-y_mod <- Y ~ A * X
+y_mod <- Y ~ A * X1
 
-a_mod <- A ~ X
+a_mod <- A ~ X1
 
-s_mod <- P_S_cond_AX ~ A + X
+s_mod <- pS ~ A + X1
 
-fit <- svycdiff(samp, "OM", a_mod, s_mod, y_mod, "gaussian")
+fit <- svycdiff(samp, "DR", a_mod, s_mod, y_mod, "gaussian")
 
 fit
 ```
@@ -82,3 +82,7 @@ devtools::install_github("salernos/svycdiff", build_vignettes = TRUE)
 ## Questions
 
 For technical details on the method, see please refer to Salerno et al. (2024+) *"What's the weight? Estimating controlled outcome differences in complex surveys for health disparities research."* To reproduce the analysis results for the main paper, see `inst/nhanes.Rmd`. For questions and comments, please contact Stephen Salerno (<ssalerno@fredhutch.org>).
+
+```{r}
+sessionInfo()
+```

@@ -16,10 +16,11 @@ svycdiff(
 )
 }
 \arguments{
-\item{df}{a data frame or tibble containing the variables in the models.}
+\item{df}{a `data.frame` or `tibble` containing the variables in the models.}
 
-\item{id_form}{a string indicating which identification formula to be used.
-Options include "OM", "IPW1", or "IPW2". See 'Details' for more information.}
+\item{id_form}{a `string` indicating which identification formula to be used.
+Options include \code{"OM"}, \code{"IPW1"}, \code{"IPW2"}, or \code{"DR"}.
+See 'Details' for information.}
 
 \item{a_form}{an object of class `formula` which describes the propensity
 score model to be fit.}
@@ -28,15 +29,17 @@ score model to be fit.}
 model to be fit.}
 
 \item{y_form}{an object of class `formula` which describes the outcome model
-to be fit. Only used if `id_form` = "OM", else `y_form = y ~ 1`.}
+to be fit. Only used if \code{id_form = "OM"}, else \code{y_form = y ~ 1}.}
 
-\item{y_fam}{a family function. Only used if `id_form` = "OM", else
-`y_fam = NULL`.}
+\item{y_fam}{a `family` function. Only used if \code{id_form = "OM"}, else
+\code{y_fam = NULL}. Current options include \code{gaussian},
+\code{binomial}, or \code{poisson}.}
 
-\item{strata}{a string indicating strata, else `strata = NULL` for no strata.}
+\item{strata}{a `string` indicating strata, else \code{strata = NULL}
+for no strata.}
 
-\item{cluster}{a string indicating cluster IDs, else `cluster = NULL` for no
-clusters.}
+\item{cluster}{a `string` indicating cluster IDs, else \code{cluster = NULL}
+for no clusters.}
 }
 \value{
 `svycdiff` returns an object of class "svycdiff" which contains:
@@ -66,29 +69,28 @@ clustered, stratified survey samples where sample selection depends on
 the comparison group.
 }
 \details{
-The argument \code{id_form} takes possible values "OM", "IPW1", or "IPW2",
-corresponding to the three formulas presented in Salerno et al. "OM" refers
-to the method that uses outcome modeling and direct standardization to
-estimate the controlled difference, while IPW1 and IPW2 are inverse
-probability weighted methods. IPW1 and IPW2 differ with respect to how the
-joint propensity and selection mechanisms are factored (see Salerno et al.
-for additional details). "OM", "IPW1", or "IPW2" are useful in different
-settings, which warrants some brief discussion here. "OM" requires you to
-specify an outcome regression model, whereas "IPW1" and "IPW2" do not
-require estimation, nor do they assume additivity or interactivity. However,
-while OM, IPW1, and IPW2 are consistent, OM is most efficient if correctly
-specified.
+The argument \code{id_form} takes possible values \code{"OM"},
+\code{"IPW1"}, \code{"IPW2"}, or \code{"DR"}, corresponding to the four
+formulas presented in Salerno et al. \code{"OM"} refers to the method that
+uses outcome modeling and direct standardization to estimate the controlled
+difference, while \code{"IPW1"} and \code{"IPW2"} are inverse probability
+weighted methods. \code{"IPW1"} and \code{"IPW2"} differ with respect to how
+the joint propensity and selection mechanisms are factored (see Salerno et
+al. for additional details). \code{"DR"} refers to the doubly robust form of
+estimator, which essentially combines \code{"OM"} and \code{"IPW2"}.
 
-For IPW1/IPW2, \code{y_form} should be of the form \code{Y ~ 1}.
+For \code{id_form = "IPW1"} or \code{id_form = "IPW2"}, \code{y_form} should
+be of the form \code{Y ~ 1}.
 
-For known S, \code{s_form} should be of the form \code{S ~ 1}, where
-\code{S} is the variable corresponding to the probability of selection.
-There should be two additional variables in the dataset: P_S_cond_A1X and
-P_S_cond_A0X, corresponding to the known probability of selection
-conditional on A = 1 or 0 and X = x, respectively. If these quantities are
-not known, s_form should contain the variables which affect sample selection
-on the right hand side of the equation, including the comparison group
-variable of interest.
+For known selection mechanisms, \code{s_form} should be of the form
+\code{pS ~ 1}, where \code{pS} is the variable corresponding to the
+probability of selection (e.g., inverse of the selection weight), and there
+should be two additional variables in the dataset: \code{P_S_cond_A1X} and
+\code{P_S_cond_A0X}, corresponding to the known probability of selection
+conditional on \eqn{A = 1} or \eqn{0} and \eqn{X = x}, respectively. If
+these quantities are not known, \code{s_form} should contain the variables
+which affect sample selection on the right hand side of the equation,
+including the comparison group variable of interest.
 }
 \examples{
 
@@ -96,17 +98,17 @@ N <- 1000
 
 dat <- simdat(N)
 
-S <- rbinom(N, 1, dat$P_S_cond_AX)
+S <- rbinom(N, 1, dat$pS)
 
 samp <- dat[S == 1,]
 
-y_mod <- Y ~ A * X
+y_mod <- Y ~ A * X1
 
-a_mod <- A ~ X
+a_mod <- A ~ X1
 
-s_mod <- P_S_cond_AX ~ A + X
+s_mod <- pS ~ A + X1
 
-fit <- svycdiff(samp, "OM", a_mod, s_mod, y_mod, "gaussian")
+fit <- svycdiff(samp, "DR", a_mod, s_mod, y_mod, "gaussian")
 
 fit
 

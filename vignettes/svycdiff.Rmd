@@ -149,3 +149,6 @@ fit
 
 As shown, we estimate the controlled difference to be `r round(fit$cdiff[1], 3)`, as compared to the true controlled difference of `r round(true_cdiff, 4)`. For technical details on the method, see please refer to Salerno et al. (2024+) *"What's the weight? Estimating controlled outcome differences in complex surveys for health disparities research."* To reproduce the analysis results for the main paper, see `inst/nhanes.Rmd`.
 
+```{r}
+sessionInfo()
+```
