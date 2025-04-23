@@ -83,12 +83,13 @@ the comparison group.</p>
 
 
 <dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
-<dd><p>a data frame or tibble containing the variables in the models.</p></dd>
+<dd><p>a `data.frame` or `tibble` containing the variables in the models.</p></dd>
 
 
 <dt id="arg-id-form">id_form<a class="anchor" aria-label="anchor" href="#arg-id-form"></a></dt>
-<dd><p>a string indicating which identification formula to be used.
-Options include "OM", "IPW1", or "IPW2". See 'Details' for more information.</p></dd>
+<dd><p>a `string` indicating which identification formula to be used.
+Options include <code>"OM"</code>, <code>"IPW1"</code>, <code>"IPW2"</code>, or <code>"DR"</code>.
+See 'Details' for information.</p></dd>
 
 
 <dt id="arg-a-form">a_form<a class="anchor" aria-label="anchor" href="#arg-a-form"></a></dt>
@@ -103,21 +104,23 @@ model to be fit.</p></dd>
 
 <dt id="arg-y-form">y_form<a class="anchor" aria-label="anchor" href="#arg-y-form"></a></dt>
 <dd><p>an object of class `formula` which describes the outcome model
-to be fit. Only used if `id_form` = "OM", else `y_form = y ~ 1`.</p></dd>
+to be fit. Only used if <code>id_form = "OM"</code>, else <code>y_form = y ~ 1</code>.</p></dd>
 
 
 <dt id="arg-y-fam">y_fam<a class="anchor" aria-label="anchor" href="#arg-y-fam"></a></dt>
-<dd><p>a family function. Only used if `id_form` = "OM", else
-`y_fam = NULL`.</p></dd>
+<dd><p>a `family` function. Only used if <code>id_form = "OM"</code>, else
+<code>y_fam = NULL</code>. Current options include <code>gaussian</code>,
+<code>binomial</code>, or <code>poisson</code>.</p></dd>
 
 
 <dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
-<dd><p>a string indicating strata, else `strata = NULL` for no strata.</p></dd>
+<dd><p>a `string` indicating strata, else <code>strata = NULL</code>
+for no strata.</p></dd>
 
 
 <dt id="arg-cluster">cluster<a class="anchor" aria-label="anchor" href="#arg-cluster"></a></dt>
-<dd><p>a string indicating cluster IDs, else `cluster = NULL` for no
-clusters.</p></dd>
+<dd><p>a `string` indicating cluster IDs, else <code>cluster = NULL</code>
+for no clusters.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -152,27 +155,26 @@ clusters.</p></dd>
 </dl></div>
     <div id="details">
     <h2>Details</h2>
-    <p>The argument <code>id_form</code> takes possible values "OM", "IPW1", or "IPW2",
-corresponding to the three formulas presented in Salerno et al. "OM" refers
-to the method that uses outcome modeling and direct standardization to
-estimate the controlled difference, while IPW1 and IPW2 are inverse
-probability weighted methods. IPW1 and IPW2 differ with respect to how the
-joint propensity and selection mechanisms are factored (see Salerno et al.
-for additional details). "OM", "IPW1", or "IPW2" are useful in different
-settings, which warrants some brief discussion here. "OM" requires you to
-specify an outcome regression model, whereas "IPW1" and "IPW2" do not
-require estimation, nor do they assume additivity or interactivity. However,
-while OM, IPW1, and IPW2 are consistent, OM is most efficient if correctly
-specified.</p>
-<p>For IPW1/IPW2, <code>y_form</code> should be of the form <code>Y ~ 1</code>.</p>
-<p>For known S, <code>s_form</code> should be of the form <code>S ~ 1</code>, where
-<code>S</code> is the variable corresponding to the probability of selection.
-There should be two additional variables in the dataset: P_S_cond_A1X and
-P_S_cond_A0X, corresponding to the known probability of selection
-conditional on A = 1 or 0 and X = x, respectively. If these quantities are
-not known, s_form should contain the variables which affect sample selection
-on the right hand side of the equation, including the comparison group
-variable of interest.</p>
+    <p>The argument <code>id_form</code> takes possible values <code>"OM"</code>,
+<code>"IPW1"</code>, <code>"IPW2"</code>, or <code>"DR"</code>, corresponding to the four
+formulas presented in Salerno et al. <code>"OM"</code> refers to the method that
+uses outcome modeling and direct standardization to estimate the controlled
+difference, while <code>"IPW1"</code> and <code>"IPW2"</code> are inverse probability
+weighted methods. <code>"IPW1"</code> and <code>"IPW2"</code> differ with respect to how
+the joint propensity and selection mechanisms are factored (see Salerno et
+al. for additional details). <code>"DR"</code> refers to the doubly robust form of
+estimator, which essentially combines <code>"OM"</code> and <code>"IPW2"</code>.</p>
+<p>For <code>id_form = "IPW1"</code> or <code>id_form = "IPW2"</code>, <code>y_form</code> should
+be of the form <code>Y ~ 1</code>.</p>
+<p>For known selection mechanisms, <code>s_form</code> should be of the form
+<code>pS ~ 1</code>, where <code>pS</code> is the variable corresponding to the
+probability of selection (e.g., inverse of the selection weight), and there
+should be two additional variables in the dataset: <code>P_S_cond_A1X</code> and
+<code>P_S_cond_A0X</code>, corresponding to the known probability of selection
+conditional on \(A = 1\) or \(0\) and \(X = x\), respectively. If
+these quantities are not known, <code>s_form</code> should contain the variables
+which affect sample selection on the right hand side of the equation,
+including the comparison group variable of interest.</p>
     </div>
 
     <div id="ref-examples">
@@ -182,17 +184,17 @@ variable of interest.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simdat.html">simdat</a></span><span class="op">(</span><span class="va">N</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="va">dat</span><span class="op">$</span><span class="va">P_S_cond_AX</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="va">dat</span><span class="op">$</span><span class="va">pS</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">samp</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">S</span> <span class="op">==</span> <span class="fl">1</span>,<span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">y_mod</span> <span class="op">&lt;-</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X</span></span></span>
+<span class="r-in"><span><span class="va">y_mod</span> <span class="op">&lt;-</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X1</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">a_mod</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">~</span> <span class="va">X</span></span></span>
+<span class="r-in"><span><span class="va">a_mod</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">~</span> <span class="va">X1</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">s_mod</span> <span class="op">&lt;-</span> <span class="va">P_S_cond_AX</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">X</span></span></span>
+<span class="r-in"><span><span class="va">s_mod</span> <span class="op">&lt;-</span> <span class="va">pS</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">X1</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">svycdiff</span><span class="op">(</span><span class="va">samp</span>, <span class="st">"OM"</span>, <span class="va">a_mod</span>, <span class="va">s_mod</span>, <span class="va">y_mod</span>, <span class="st">"gaussian"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">svycdiff</span><span class="op">(</span><span class="va">samp</span>, <span class="st">"DR"</span>, <span class="va">a_mod</span>, <span class="va">s_mod</span>, <span class="va">y_mod</span>, <span class="st">"gaussian"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fit</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -207,13 +209,13 @@ variable of interest.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> CDIFF:  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CDIFF      SE     LCL     UCL P-Value </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.0833  0.0946  0.8980  1.2687  0.0000 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.9998  0.1356  0.7341  1.2656  0.0000 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> CDIFF:  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CDIFF      SE     LCL     UCL P-Value </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.0833  0.0946  0.8980  1.2687  0.0000 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.9998  0.1356  0.7341  1.2656  0.0000 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome Model:  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -226,24 +228,24 @@ variable of interest.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Quantile residuals:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Min      1Q  Median      3Q     Max </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -3.9217 -0.5517  0.0146  0.5745  4.6954 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -3.3345 -0.6186  0.0328  0.6709  3.2765 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients (mean model with logit link):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Estimate Std. Error z value Pr(&gt;|z|)    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.015923   0.006394    2.49   0.0128 *  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> A           0.983983   0.007764  126.74   &lt;2e-16 ***</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> X           0.991856   0.004474  221.71   &lt;2e-16 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.013234   0.006230   2.124   0.0336 *  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> A           0.976878   0.008361 116.834   &lt;2e-16 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X1          0.998339   0.005393 185.121   &lt;2e-16 ***</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Phi coefficients (precision model with identity link):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Estimate Std. Error z value Pr(&gt;|z|)    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (phi)   808.32      40.79   19.82   &lt;2e-16 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (phi)   619.90      35.86   17.29   &lt;2e-16 ***</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Type of estimator: ML (maximum likelihood)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Log-likelihood:  2457 on 4 Df</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pseudo R-squared: 0.9923</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Number of iterations: 61 (BFGS) + 3 (Fisher scoring) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Log-likelihood:  1654 on 4 Df</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pseudo R-squared: 0.9927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Number of iterations: 98 (BFGS) + 1 (Fisher scoring) </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

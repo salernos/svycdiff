@@ -105,17 +105,17 @@
 <span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simdat.html">simdat</a></span><span class="op">(</span><span class="va">N</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="va">dat</span><span class="op">$</span><span class="va">P_S_cond_AX</span><span class="op">)</span></span>
+<span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="va">dat</span><span class="op">$</span><span class="va">pS</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">samp</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">S</span> <span class="op">==</span> <span class="fl">1</span>,<span class="op">]</span></span>
 <span></span>
-<span><span class="va">y_mod</span> <span class="op">&lt;-</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X</span></span>
+<span><span class="va">y_mod</span> <span class="op">&lt;-</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X1</span></span>
 <span></span>
-<span><span class="va">a_mod</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">~</span> <span class="va">X</span></span>
+<span><span class="va">a_mod</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">~</span> <span class="va">X1</span></span>
 <span></span>
-<span><span class="va">s_mod</span> <span class="op">&lt;-</span> <span class="va">P_S_cond_AX</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">X</span></span>
+<span><span class="va">s_mod</span> <span class="op">&lt;-</span> <span class="va">pS</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">X1</span></span>
 <span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/svycdiff.html">svycdiff</a></span><span class="op">(</span><span class="va">samp</span>, <span class="st">"OM"</span>, <span class="va">a_mod</span>, <span class="va">s_mod</span>, <span class="va">y_mod</span>, <span class="st">"gaussian"</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/svycdiff.html">svycdiff</a></span><span class="op">(</span><span class="va">samp</span>, <span class="st">"DR"</span>, <span class="va">a_mod</span>, <span class="va">s_mod</span>, <span class="va">y_mod</span>, <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit</span></span></code></pre></div>
 </div>
@@ -133,6 +133,33 @@
 <h2 id="questions">Questions<a class="anchor" aria-label="anchor" href="#questions"></a>
 </h2>
 <p>For technical details on the method, see please refer to Salerno et al. (2024+) <em>“What’s the weight? Estimating controlled outcome differences in complex surveys for health disparities research.”</em> To reproduce the analysis results for the main paper, see <code>inst/nhanes.Rmd</code>. For questions and comments, please contact Stephen Salerno (<a href="mailto:ssalerno@fredhutch.org" class="email">ssalerno@fredhutch.org</a>).</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.4.1 (2024-06-14 ucrt)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-w64-mingw32/x64</span></span>
+<span><span class="co">#&gt; Running under: Windows 11 x64 (build 22631)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt; [1] LC_COLLATE=English_United States.utf8 </span></span>
+<span><span class="co">#&gt; [2] LC_CTYPE=English_United States.utf8   </span></span>
+<span><span class="co">#&gt; [3] LC_MONETARY=English_United States.utf8</span></span>
+<span><span class="co">#&gt; [4] LC_NUMERIC=C                          </span></span>
+<span><span class="co">#&gt; [5] LC_TIME=English_United States.utf8    </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: America/New_York</span></span>
+<span><span class="co">#&gt; tzcode source: internal</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] compiler_4.4.1    fastmap_1.2.0     cli_3.6.3         tools_4.4.1      </span></span>
+<span><span class="co">#&gt;  [5] htmltools_0.5.8.1 rstudioapi_0.17.1 yaml_2.3.10       rmarkdown_2.29   </span></span>
+<span><span class="co">#&gt;  [9] knitr_1.50        xfun_0.52         digest_0.6.37     rlang_1.1.4      </span></span>
+<span><span class="co">#&gt; [13] evaluate_1.0.3</span></span></code></pre></div>
 </div>
 </div>
   </div>
