@@ -22,12 +22,13 @@ LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Imports: 
+    MASS,
     betareg,
     numDeriv,
     stats,
     survey
 Depends: 
-    R (>= 3.5.0)
+    R (>= 4.1.0)
 Suggests: 
     knitr,
     rmarkdown,

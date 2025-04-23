@@ -11,14 +11,7 @@
 #             print   - Print method
 #             summary - Summary method
 #
-#  UPDATED: 2024-05-24
-#
-#  NOTES:
-#
-#    - Future Updates:
-#
-#        1. Allow Different Families for Y | A, X
-#        2. Better Way to Allow for Known S | A, X
+#  UPDATED: 2024-04-22
 #
 #===============================================================================
 
@@ -84,7 +77,7 @@
 
     wtd_P_A1_cond_X <- plogis(A_X%*%tau_w)
 
-    wtd_U_A <- A_X*c(aa - wtd_P_A1_cond_X)/ss
+    wtd_U_A <- A_X * c((aa - wtd_P_A1_cond_X) / ss)
 
     #- Selection Model
 
@@ -123,12 +116,46 @@
 
     #- Outcome Model
 
-    U_Y <- Y_AX*c(yy - Y_AX%*%gamma)
+    if (y_fam == "gaussian") {
+
+      mu_Y <- Y_AX %*% gamma
+
+    } else if (y_fam == "binomial") {
+
+      mu_Y <- plogis(Y_AX %*% gamma)
+
+    } else if (y_fam == "poisson") {
+
+      mu_Y <- exp(Y_AX %*% gamma)
+
+    } else {
+
+      stop("y_fam must be one of 'gaussian', 'binomial', or 'poisson'.")
+    }
+
+    U_Y <- Y_AX * c(yy - mu_Y)
 
     #- CDIFF
 
-    m1 <- Y_A1X%*%gamma
-    m0 <- Y_A0X%*%gamma
+    if (y_fam == "gaussian") {
+
+      m1 <- Y_A1X %*% gamma
+      m0 <- Y_A0X %*% gamma
+
+    } else if (y_fam == "binomial") {
+
+      m1 <- plogis(Y_A1X %*% gamma)
+      m0 <- plogis(Y_A0X %*% gamma)
+
+    } else if (y_fam == "poisson") {
+
+      m1 <- exp(Y_A1X %*% gamma)
+      m0 <- exp(Y_A0X %*% gamma)
+
+    } else {
+
+      stop("y_fam must be one of 'gaussian', 'binomial', or 'poisson'.")
+    }
 
     U_CDIFF <- CDIFF - ((m1 - m0)/P_S1_cond_X)*P_S1
 
@@ -170,7 +197,7 @@
 
     wtd_P_A1_cond_X <- plogis(A_X%*%tau_w)
 
-    wtd_U_A <- A_X*c(aa - wtd_P_A1_cond_X)/ss
+    wtd_U_A <- A_X * c((aa - wtd_P_A1_cond_X) / ss)
 
     #- Selection Model
 
@@ -249,11 +276,11 @@
 
     P_A1_cond_X <- plogis(A_X%*%tau)
 
-    U_A <- A_X*c(aa - P_A1_cond_X)
+    U_A <- A_X * c(aa - P_A1_cond_X)
 
     wtd_P_A1_cond_X <- plogis(A_X%*%tau_w)
 
-    wtd_U_A <- A_X*c(aa - wtd_P_A1_cond_X)/ss
+    wtd_U_A <- A_X * c((aa - wtd_P_A1_cond_X) / ss)
 
     #- Selection Model
 
@@ -305,6 +332,140 @@
     } else {
 
       return(cbind(U_A, wtd_U_A, U_S, U_Phi, U_CDIFF))
+    }
+
+  } else if (id_form == "DR") {
+
+    tau   <- theta[1:theta_dims[1]]
+
+    tau_w <- theta[theta_dims[1] + 1:theta_dims[2]]
+
+    if (S_known) {
+
+      gamma <- theta[theta_dims[1] + theta_dims[2] + 1:theta_dims[3]]
+
+      CDIFF <- theta[theta_dims[1] + theta_dims[2] + theta_dims[3] + 1]
+
+    } else {
+
+      beta <- theta[theta_dims[1] + theta_dims[2] + 1:(theta_dims[3] - 1)]
+
+      phi  <- theta[theta_dims[1] + theta_dims[2] + theta_dims[3]]
+
+      gamma <- theta[theta_dims[1] + theta_dims[2] +
+
+                       theta_dims[3] + 1:theta_dims[4]]
+
+      CDIFF <- theta[theta_dims[1] + theta_dims[2] +
+
+                       theta_dims[3] + theta_dims[4] + 1]
+    }
+
+    #-- SCORE EQUATIONS
+
+    #- Propensity Models
+
+    P_A1_cond_X <- plogis(A_X%*%tau)
+
+    U_A <- A_X * c(aa - P_A1_cond_X)
+
+    wtd_P_A1_cond_X <- plogis(A_X%*%tau_w)
+
+    wtd_U_A <- A_X * c((aa - wtd_P_A1_cond_X) / ss)
+
+    #- Selection Model
+
+    if (S_known) {
+
+      P_S1_cond_A1X <- df$P_S_cond_A1X
+
+      P_S1_cond_A0X <- df$P_S_cond_A0X
+
+    } else {
+
+      P_S1_cond_AX  <- plogis(S_AX%*%beta)
+
+      P_S1_cond_A1X <- plogis(S_A1X%*%beta)
+
+      P_S1_cond_A0X <- plogis(S_A0X%*%beta)
+
+      ss_star <- qlogis(ss)
+
+      mu_star <- digamma(P_S1_cond_AX*phi) - digamma((1 - P_S1_cond_AX)*phi)
+
+      W <- diag(c(P_S1_cond_AX*(1 - P_S1_cond_AX)))
+
+      U_S <- phi*(W%*%S_AX)*c(ss_star - mu_star)
+
+      U_Phi <- (P_S1_cond_AX * (ss_star - mu_star) + log(1 - ss) -
+
+                  digamma((1 - P_S1_cond_AX)*phi) + digamma(phi))
+    }
+
+    P_S1_cond_X <- P_S1_cond_A1X*wtd_P_A1_cond_X +
+
+      P_S1_cond_A0X*(1 - wtd_P_A1_cond_X)
+
+    P_S1 <- length(ss) / sum(1/ss)
+
+    #- Outcome Model
+
+    if (y_fam == "gaussian") {
+
+      mu_Y <- Y_AX %*% gamma
+
+      m1 <- Y_A1X %*% gamma
+
+      m0 <- Y_A0X %*% gamma
+
+    } else if (y_fam == "binomial") {
+
+      mu_Y <- plogis(Y_AX %*% gamma)
+
+      m1 <- plogis(Y_A1X %*% gamma)
+
+      m0 <- plogis(Y_A0X %*% gamma)
+
+    } else if (y_fam == "poisson") {
+
+      mu_Y <- exp(Y_AX %*% gamma)
+
+      m1 <- exp(Y_A1X %*% gamma)
+
+      m0 <- exp(Y_A0X %*% gamma)
+
+    } else {
+
+      stop("y_fam must be one of 'gaussian', 'binomial', or 'poisson'.")
+    }
+
+    U_Y <- Y_AX * c(yy - mu_Y)
+
+    #- CDIFF
+
+    aug_1 <- aa * (yy - m1) / (wtd_P_A1_cond_X * P_S1_cond_A1X)
+
+    aug_0 <- (1 - aa) * (yy - m0) / ((1 - wtd_P_A1_cond_X) * P_S1_cond_A0X)
+
+    aug_1 <- aug_1 * P_S1
+
+    aug_0 <- aug_0 * P_S1
+
+    OM_part_1 <- m1 * (P_S1 / P_S1_cond_X)
+
+    OM_part_0 <- m0 * (P_S1 / P_S1_cond_X)
+
+    diff_hat <- (OM_part_1 + aug_1) - (OM_part_0 + aug_0)
+
+    U_CDIFF <- CDIFF - diff_hat
+
+    if (S_known) {
+
+      return(cbind(U_A, wtd_U_A, U_Y, U_CDIFF))
+
+    } else {
+
+      return(cbind(U_A, wtd_U_A, U_S, U_Phi, U_Y, U_CDIFF))
     }
 
   } else {
