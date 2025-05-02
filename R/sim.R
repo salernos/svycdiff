@@ -7,7 +7,7 @@
 #  PURPOSE: To simulate data based on the assumed relationship presented
 #           in the conceptual diagrams for our simulation studies.
 #
-#  UPDATED: 2025-04-22
+#  UPDATED: 2025-05-01
 #
 #===============================================================================
 
@@ -66,6 +66,9 @@
 #'
 #' @param p int - Number of covariates to be generated. Defaults to 1.
 #'
+#' @param q int - Number of additional covariates that affect selection to be
+#' generated. Defaults to 0.
+#'
 #' @param n_strat int - Number of strata in the population to be generated.
 #' Defaults to 1.
 #'
@@ -100,6 +103,10 @@
 #'
 #' @param beta_X double - Coefficients for \code{X} in selection model.
 #' Defaults to a 1 vector of length \code{p}.
+#'
+#' @param beta_U double - Coefficients for \code{U} (additional covariates
+#' affection only selection) in selection model. Defaults to a 1 vector of
+#' length \code{q}.
 #'
 #' @param Y_fam string - Distribution of the outcome variable, \code{Y}.
 #' Defaults to "gaussian" for a normally distributed outcome. Other options
@@ -153,6 +160,7 @@
 #' @export
 simdat <- function(N = 1000000,
                    p = 1,
+                   q = 0,
                    #- Design Variables
                    n_strat = 1,
                    n_clust = 1,
@@ -168,6 +176,7 @@ simdat <- function(N = 1000000,
                    beta_0 = 0,
                    beta_A = 1,
                    beta_X = rep(1, p),
+                   beta_U = rep(1, q),
                    #- Outcome Model
                    Y_fam = c("gaussian", "binary", "poisson"),
                    alpha_0 = 0,
@@ -182,8 +191,8 @@ simdat <- function(N = 1000000,
 
   # Generate Strata and Cluster Means
 
-  mu_strat <- matrix(rnorm(n_strat * p, 0, sigma_strat), n_strat, p)
-  mu_clust <- matrix(rnorm(n_clust * p, 0, sigma_clust), n_clust, p)
+  mu_strat <- matrix(rnorm(n_strat * (p + q), 0, sigma_strat), n_strat, (p + q))
+  mu_clust <- matrix(rnorm(n_clust * (p + q), 0, sigma_clust), n_clust, (p + q))
 
   # Generate Covariates
 
@@ -196,16 +205,16 @@ simdat <- function(N = 1000000,
       cbind(
         Cluster = (s - 1) * n_clust + c,
         Strata = s,
-        mvrnorm(n_grp, mu, diag(rep(1, p)))
+        mvrnorm(n_grp, mu, diag(rep(1, p + q)))
       )
     }))
   }))
 
   if (X_fam == "binary") {
 
-    dat[, 3:ncol(dat)] <- apply(
+    dat[, 3:(2 + p)] <- apply(
 
-      dat[, 3:ncol(dat)], 2,
+      dat[, 3:(2 + p)], 2,
 
       function(x) {
 
@@ -216,9 +225,20 @@ simdat <- function(N = 1000000,
 
   dat <- data.frame(dat)
 
-  colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p))
+  if (q > 0) {
 
-  X <- as.matrix(dat[, 3:ncol(dat)])
+    colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p), paste0("U", 1:q))
+
+    X <- as.matrix(dat[, 3:(2 + p)])
+
+    U <- as.matrix(dat[, (3 + p):(2 + p + q)])
+
+  } else {
+
+    colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p))
+
+    X <- as.matrix(dat[, 3:(2 + p)])
+  }
 
   # Propensity Model
 
@@ -237,7 +257,7 @@ simdat <- function(N = 1000000,
 
   eS <- rnorm(N, 0, 0.1)
 
-  dat$pS <- plogis(beta_0 + beta_A * dat$A + X %*% beta_X + eS)
+  dat$pS <- plogis(beta_0 + beta_A * dat$A + X %*% beta_X + U %*% beta_U  + eS)
 
   # Outcome Model
 
