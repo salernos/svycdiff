@@ -24,18 +24,15 @@ TELOMEAN
 Telomere
 WIC
 WTMEC
-additivity
 al
 arXiv
 betareg
 cdc
-cond
 confounder
 dL
 doi
 et
 factorizations
-fam
 frac
 generalizability
 glm
@@ -45,6 +42,7 @@ lcl
 nchs
 nhanes
 pcr
+poisson
 polymerase
 pval
 superpopulation

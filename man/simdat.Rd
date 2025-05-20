@@ -7,6 +7,7 @@
 simdat(
   N = 1e+06,
   p = 1,
+  q = 0,
   n_strat = 1,
   n_clust = 1,
   sigma_strat = 1,
@@ -19,6 +20,7 @@ simdat(
   beta_0 = 0,
   beta_A = 1,
   beta_X = rep(1, p),
+  beta_U = rep(1, q),
   Y_fam = c("gaussian", "binary", "poisson"),
   alpha_0 = 0,
   alpha_A = 1,
@@ -30,6 +32,9 @@ simdat(
 \item{N}{int - Number of observations to be generated. Defaults to 1000000.}
 
 \item{p}{int - Number of covariates to be generated. Defaults to 1.}
+
+\item{q}{int - Number of additional covariates that affect selection to be
+generated. Defaults to 0.}
 
 \item{n_strat}{int - Number of strata in the population to be generated.
 Defaults to 1.}
@@ -65,6 +70,10 @@ Defaults to 1.}
 
 \item{beta_X}{double - Coefficients for \code{X} in selection model.
 Defaults to a 1 vector of length \code{p}.}
+
+\item{beta_U}{double - Coefficients for \code{U} (additional covariates
+affection only selection) in selection model. Defaults to a 1 vector of
+length \code{q}.}
 
 \item{Y_fam}{string - Distribution of the outcome variable, \code{Y}.
 Defaults to "gaussian" for a normally distributed outcome. Other options
