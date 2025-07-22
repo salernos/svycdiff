@@ -1,18 +1,3 @@
-#===============================================================================
-#
-#  PROGRAM: sim.R
-#
-#  AUTHOR:  Stephen Salerno (ssalerno@fredhutch.org)
-#
-#  PURPOSE: To simulate data based on the assumed relationship presented
-#           in the conceptual diagrams for our simulation studies.
-#
-#  UPDATED: 2025-04-22
-#
-#===============================================================================
-
-#=== SIMULATION FUNCTION =======================================================
-
 #' Simulate data with varying degrees of selection and confounding bias
 #'
 #' @description
@@ -66,6 +51,9 @@
 #'
 #' @param p int - Number of covariates to be generated. Defaults to 1.
 #'
+#' @param q int - Number of additional covariates that affect selection to be
+#' generated. Defaults to 0.
+#'
 #' @param n_strat int - Number of strata in the population to be generated.
 #' Defaults to 1.
 #'
@@ -100,6 +88,10 @@
 #'
 #' @param beta_X double - Coefficients for \code{X} in selection model.
 #' Defaults to a 1 vector of length \code{p}.
+#'
+#' @param beta_U double - Coefficients for \code{U} (additional covariates
+#' affection only selection) in selection model. Defaults to a 1 vector of
+#' length \code{q}.
 #'
 #' @param Y_fam string - Distribution of the outcome variable, \code{Y}.
 #' Defaults to "gaussian" for a normally distributed outcome. Other options
@@ -151,41 +143,58 @@
 #' head(dat)
 #'
 #' @export
-simdat <- function(N = 1000000,
-                   p = 1,
-                   #- Design Variables
-                   n_strat = 1,
-                   n_clust = 1,
-                   sigma_strat = 1,
-                   sigma_clust = 1,
-                   X_fam = c("gaussian", "binary"),
-                   #- Propensity Model
-                   tau_0 = 0,
-                   tau_A = 1,
-                   tau_X = rep(1, p),
-                   tau_X12 = 0,
-                   #- Selection Model
-                   beta_0 = 0,
-                   beta_A = 1,
-                   beta_X = rep(1, p),
-                   #- Outcome Model
-                   Y_fam = c("gaussian", "binary", "poisson"),
-                   alpha_0 = 0,
-                   alpha_A = 1,
-                   alpha_X = rep(1, p),
-                   alpha_AX = 0) {
+
+simdat <- function(
+
+  #- Population
+
+  N = 1000000,
+  p = 1,
+  q = 0,
+
+  #- Design Variables
+
+  n_strat = 1,
+  n_clust = 1,
+  sigma_strat = 1,
+  sigma_clust = 1,
+  X_fam = c("gaussian", "binary"),
+
+  #- Propensity Model
+
+  tau_0 = 0,
+  tau_A = 1,
+  tau_X = rep(1, p),
+  tau_X12 = 0,
+
+  #- Selection Model
+
+  beta_0 = 0,
+  beta_A = 1,
+  beta_X = rep(1, p),
+  beta_U = rep(1, q),
+
+  #- Outcome Model
+
+  Y_fam = c("gaussian", "binary", "poisson"),
+  alpha_0 = 0,
+  alpha_A = 1,
+  alpha_X = rep(1, p),
+  alpha_AX = 0) {
 
   X_fam <- match.arg(X_fam)
+
   Y_fam <- match.arg(Y_fam)
 
   n_grp <- N / (n_strat * n_clust)
 
-  # Generate Strata and Cluster Means
+  #-- GENERATE STRATA AND CLUSTER MEANS
 
-  mu_strat <- matrix(rnorm(n_strat * p, 0, sigma_strat), n_strat, p)
-  mu_clust <- matrix(rnorm(n_clust * p, 0, sigma_clust), n_clust, p)
+  mu_strat <- matrix(rnorm(n_strat * (p + q), 0, sigma_strat), n_strat, (p + q))
 
-  # Generate Covariates
+  mu_clust <- matrix(rnorm(n_clust * (p + q), 0, sigma_clust), n_clust, (p + q))
+
+  #-- GENERATE COVARIATES
 
   dat <- do.call(rbind, lapply(1:n_strat, function(s) {
 
@@ -196,16 +205,16 @@ simdat <- function(N = 1000000,
       cbind(
         Cluster = (s - 1) * n_clust + c,
         Strata = s,
-        mvrnorm(n_grp, mu, diag(rep(1, p)))
+        mvrnorm(n_grp, mu, diag(rep(1, p + q)))
       )
     }))
   }))
 
   if (X_fam == "binary") {
 
-    dat[, 3:ncol(dat)] <- apply(
+    dat[, 3:(2 + p)] <- apply(
 
-      dat[, 3:ncol(dat)], 2,
+      dat[, 3:(2 + p)], 2,
 
       function(x) {
 
@@ -216,11 +225,22 @@ simdat <- function(N = 1000000,
 
   dat <- data.frame(dat)
 
-  colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p))
+  if (q > 0) {
 
-  X <- as.matrix(dat[, 3:ncol(dat)])
+    colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p), paste0("U", 1:q))
 
-  # Propensity Model
+    X <- as.matrix(dat[, 3:(2 + p)])
+
+    U <- as.matrix(dat[, (3 + p):(2 + p + q)])
+
+  } else {
+
+    colnames(dat) <- c("Cluster", "Strata", paste0("X", 1:p))
+
+    X <- as.matrix(dat[, 3:(2 + p)])
+  }
+
+  #-- PROPENSITY MODEL
 
   if (p > 1) {
 
@@ -233,16 +253,42 @@ simdat <- function(N = 1000000,
 
   dat$A <- rbinom(N, 1, dat$pA)
 
-  # Selection Model
+  #-- SELECTION MODEL
 
   eS <- rnorm(N, 0, 0.1)
 
-  dat$pS <- plogis(beta_0 + beta_A * dat$A + X %*% beta_X + eS)
+  if (q > 0) {
 
-  # Outcome Model
+    dat$pS <- plogis(
+
+      beta_0 + beta_A * dat$A + X %*% beta_X + U %*% beta_U + eS)
+
+    dat$P_S_cond_A1X <- plogis(
+
+      beta_0 + beta_A * 1 + X %*% beta_X + U %*% beta_U + eS)
+
+    dat$P_S_cond_A0X <- plogis(
+
+      beta_0 + beta_A * 0 + X %*% beta_X + U %*% beta_U + eS)
+
+  } else {
+
+    dat$pS <- plogis(beta_0 + beta_A * dat$A + X %*% beta_X + eS)
+
+    dat$P_S_cond_A1X <- plogis(
+
+      beta_0 + beta_A * 1 + X %*% beta_X + eS)
+
+    dat$P_S_cond_A0X <- plogis(
+
+      beta_0 + beta_A * 0 + X %*% beta_X + eS)
+  }
+
+  #-- OUTCOME MODEL
 
   mu_Y0 <- as.vector(alpha_0 + X %*% alpha_X)
-  mu_Y1 <- as.vector(alpha_0 + alpha_A + alpha_AX * (X %*% alpha_X))
+
+  mu_Y1 <- as.vector(mu_Y0 + alpha_A + alpha_AX * (X %*% alpha_X))
 
   if (Y_fam == "gaussian") {
 
@@ -266,11 +312,9 @@ simdat <- function(N = 1000000,
 
   dat$Y <- dat$A * dat$Y1 + (1 - dat$A) * dat$Y0
 
-  # Calculate Controlled Difference
+  #-- CONTROLLED DIFFERENCE
 
   dat$CDIFF <- mean(dat$Y1 - dat$Y0)
 
   return(dat)
 }
-
-#=== END =======================================================================

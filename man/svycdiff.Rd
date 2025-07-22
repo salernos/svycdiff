@@ -29,11 +29,12 @@ score model to be fit.}
 model to be fit.}
 
 \item{y_form}{an object of class `formula` which describes the outcome model
-to be fit. Only used if \code{id_form = "OM"}, else \code{y_form = y ~ 1}.}
+to be fit. Only used if \code{id_form = "OM"} or \code{id_form = "DR"},
+else \code{y_form = y ~ 1}.}
 
-\item{y_fam}{a `family` function. Only used if \code{id_form = "OM"}, else
-\code{y_fam = NULL}. Current options include \code{gaussian},
-\code{binomial}, or \code{poisson}.}
+\item{y_fam}{a `family` function. Only used if \code{id_form = "OM"} or
+\code{id_form = "DR"}, else \code{y_fam = NULL}. Current options include
+\code{gaussian}, \code{binomial}, or \code{poisson}.}
 
 \item{strata}{a `string` indicating strata, else \code{strata = NULL}
 for no strata.}
