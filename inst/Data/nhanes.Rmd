@@ -420,6 +420,10 @@ fit_ID2b_acd <- svycdiff(NHANES2, "IPW2", a_mod_acd, s_mod_acd, y_mod2_acd,
                        
   NULL, "SDMVSTRA", "SDMVPSU")
 
+fit_ID3_acd <- svycdiff(NHANES2, "DR", a_mod_acd, s_mod_acd, y_mod_acd, 
+                       
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
 ```
 
 ```{r comparison_acd}
@@ -508,7 +512,7 @@ mthds <- c("Multiple Regression", "IPTW Estimator",
   
   "Weighted IPTW + Survey-Weighted Multiple Regression",
 
-  "Proposed OM", "Proposed IPW1","Proposed IPW2")
+  "Proposed OM", "Proposed IPW1", "Proposed IPW2", "Proposed AIPW")
 
 NHANES_RESULTS_ACD <- rbind(res_lm_acd, res_iptw_acd, res_svywtdlm_acd, 
                             
@@ -516,7 +520,9 @@ NHANES_RESULTS_ACD <- rbind(res_lm_acd, res_iptw_acd, res_svywtdlm_acd,
   
   fit_ID1_acd$cdiff[ c(1:2)], 
   fit_ID2a_acd$cdiff[c(1:2)],
-  fit_ID2b_acd$cdiff[c(1:2)]
+  fit_ID2b_acd$cdiff[c(1:2)],
+  fit_ID3_acd$cdiff[c(1:2)]
+  
 )
 
 colnames(NHANES_RESULTS_ACD) <- c("est", "err")
@@ -873,6 +879,14 @@ fit2_ID2b_ate <- svycdiff(NHANES3, "IPW2", a_mod2_ate, s_mod_ate, y_mod2_ate,
                        
   NULL, "SDMVSTRA", "SDMVPSU")
 
+fit_ID3_ate <- svycdiff(NHANES3, "DR", a_mod_ate, s_mod_ate, y_mod_ate, 
+                      
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
+fit2_ID3_ate <- svycdiff(NHANES3, "DR", a_mod2_ate, s_mod_ate, y_mod_ate, 
+                      
+  "gaussian", "SDMVSTRA", "SDMVPSU")
+
 ```
 
 ```{r comparison_ate}
@@ -1035,7 +1049,9 @@ mthds <- c("Multiple Regression",
   
   "Proposed IPW1", "Proposed IPW1 w/ Race in Propensity Model",
   
-  "Proposed IPW2", "Proposed IPW2 w/ Race in Propensity Model")
+  "Proposed IPW2", "Proposed IPW2 w/ Race in Propensity Model",
+  
+  "Proposed AIPW", "Proposed AIPW w/ Race in Propensity Model")
 
 NHANES_RESULTS_ATE <- rbind(res_lm_ate, res_iptw_ate, res_iptw_ate2, 
   
@@ -1045,7 +1061,8 @@ NHANES_RESULTS_ATE <- rbind(res_lm_ate, res_iptw_ate, res_iptw_ate2,
   
   fit_ID1_ate$cdiff[ c(1:2)], fit2_ID1_ate$cdiff[ c(1:2)],
   fit_ID2a_ate$cdiff[c(1:2)], fit2_ID2a_ate$cdiff[c(1:2)],
-  fit_ID2b_ate$cdiff[c(1:2)], fit2_ID2b_ate$cdiff[c(1:2)]
+  fit_ID2b_ate$cdiff[c(1:2)], fit2_ID2b_ate$cdiff[c(1:2)],
+  fit_ID3_ate$cdiff[c(1:2)],  fit2_ID3_ate$cdiff[c(1:2)]
 )
 
 colnames(NHANES_RESULTS_ATE) <- c("est", "err")

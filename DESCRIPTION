@@ -1,7 +1,7 @@
 Package: svycdiff
 Type: Package
 Title: Controlled Difference Estimation for Complex Surveys
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: c(
     person(given = "Stephen", family = "Salerno",
            email = "ssalerno@fredhutch.org", role = c("aut", "cre", "cph"),
@@ -10,6 +10,8 @@ Authors@R: c(
            email = "emily-roberts-1@uiowa.edu", role = c("aut")),
     person(given = "Tyler H", family = "McCormick",
            email = "tylermc@uw.edu", role = c("aut")),
+    person(given = "Fan", family = "Li",
+           email = "fan.f.li@yale.edu", role = c("aut")),
     person(given = "Bhramar", family = "Mukherjee", 
            email = "bhramar@umich.edu", role = c("aut")),
     person(given = "Xu", family = "Shi",
